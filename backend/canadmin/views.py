@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import InstituteModel
-from .serializers import InstituteSerializer
+from .models import InstituteModel, DriveModel, RoundModel, AptitudeQuestionModel, CodingQuestionModel
+from .serializers import InstituteSerializer, DriveSerializer, RoundSerializer, AptitudeQuestionSerializer, CodingQuestionSerializer
 from candidate.models import CandidateProfile, Education, Experience, Project, Skill, Certificate, Language
 from candidate.serializers import ProjectSerializer, EducationSerializer, ExperienceSerializer, SkillSerializer, CertificateSerializer, LanguageSerializer, CandidateProfileSerializer
 from authentication.models import UserTable
@@ -115,4 +115,124 @@ def GetUserDetails(request, user_id):
             "data": response
         },
         status= status.HTTP_200_OK
+    )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def AddDrive(request):
+    if request.user.role != "admin":
+        return Response(
+            {
+                "success": False,
+                "message": "Permission denied."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+    serializer = DriveSerializer(data = request.data)
+    if serializer.is_valid():
+        drive = serializer.save()
+        return Response(
+            {
+                "success": True,
+                "message": "Drive Added Successfully!!",
+                "data": DriveSerializer(drive).data
+            },
+            status=status.HTTP_201_CREATED
+        )
+    return Response(
+        {
+            "success": False,
+            "message": serializer.errors
+        },
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def AddRound(request):
+    if request.user.role != "admin":
+        return Response(
+            {
+                "success": False,
+                "message": "Permission denied."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+    serializer = RoundSerializer(data = request.data)
+    if serializer.is_valid():
+        round = serializer.save()
+        return Response(
+            {
+                "success": True,
+                "message": "Round Added Successfully!!",
+                "data": RoundSerializer(round).data
+            },
+            status= status.HTTP_201_CREATED
+        )
+    return Response(
+        {
+            "success": False,
+            "message": serializer.errors
+        },
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def AddAptitudeQuestion(request):
+    if request.user.role != "admin":
+        return Response(
+            {
+                "success": False,
+                "message": "Permission denied."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+    serializer = AptitudeQuestionSerializer(data = request.data)
+    if serializer.is_valid():
+        aptitude_question = serializer.save()
+        return Response(
+            {
+                "success": True,
+                "message": "Aptitude Question Added Successfully!!!",
+                "data": AptitudeQuestionSerializer(aptitude_question).data
+            },
+            status= status.HTTP_201_CREATED
+        )
+    return Response(
+        {
+            "success": False,
+            "message": serializer.errors
+        },
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def AddCodingQuestion(request):
+    if request.user.role != "admin":
+        return Response(
+            {
+                "success": False,
+                "message": "Permission denied."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+    serializer = CodingQuestionSerializer(data = request.data)
+    if serializer.is_valid():
+        coding_question = serializer.save()
+        return Response(
+            {
+                "success": True,
+                "message": "Coding Question Added Successfully!!!",
+                "data": CodingQuestionSerializer(coding_question).data
+            },
+            status= status.HTTP_201_CREATED
+        )
+    return Response(
+        {
+            "success": False,
+            "message": serializer.errors
+        },
+        status=status.HTTP_400_BAD_REQUEST
     )
