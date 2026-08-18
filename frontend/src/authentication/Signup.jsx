@@ -50,6 +50,7 @@ export default function Signup() {
         name: form.name,
         email: form.email,
         date_of_birth: form.date_of_birth,
+        institute: form.institute,
         password: form.password,
       });
 

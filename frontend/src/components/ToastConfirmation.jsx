@@ -1,4 +1,4 @@
-// src/components/ToastConfirmation.js
+// components/ToastConfirmation.jsx
 import React from "react";
 import toast from "react-hot-toast";
 import { FaSignOutAlt, FaTrash, FaSave, FaTimes, FaExclamationTriangle } from "react-icons/fa";
@@ -95,7 +95,24 @@ export const confirmLogout = (onConfirm) => {
   });
 };
 
-export const confirmDelete = (itemName, onConfirm) => {
+// Fixed confirmDelete to accept title, message, and return a Promise
+export const confirmDelete = (title, message) => {
+  return new Promise((resolve) => {
+    showConfirmation({
+      title: title || "Delete Item",
+      message: message || "Are you sure you want to delete this item? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      confirmColor: "red",
+      icon: <FaTrash className="text-xl" />,
+      onConfirm: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+};
+
+// Alternative: confirmDelete with callback
+export const confirmDeleteWithCallback = (itemName, onConfirm) => {
   const name = itemName || "Item";
   showConfirmation({
     title: `Delete ${name}`,

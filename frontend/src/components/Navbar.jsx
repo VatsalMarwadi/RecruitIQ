@@ -1,25 +1,28 @@
-// src/components/Navbar.js
+// src/components/Navbar.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { FaBars, FaUserCircle, FaSignOutAlt, FaUser } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { FaBars, FaUserCircle, FaSignOutAlt, FaUser, FaBriefcase, FaFileAlt } from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { confirmLogout } from "./ToastConfirmation";
 
 export default function Navbar({ toggleSidebar, user }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Get user role from location or user object
+  const isAdmin = location.pathname.startsWith("/admin");
+  const userRole = user?.role || (isAdmin ? "admin" : "candidate");
+
   const performLogout = () => {
-    // Clear localStorage or session data
+    // Clear localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("refresh_token");
     
-    // Show success message
     toast.success("Logged out successfully!");
     
-    // Redirect to login
     setTimeout(() => {
       navigate("/login");
     }, 500);
@@ -31,7 +34,6 @@ export default function Navbar({ toggleSidebar, user }) {
     });
   };
 
-  // Toggle dropdown
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
@@ -47,60 +49,110 @@ export default function Navbar({ toggleSidebar, user }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Get user initials for avatar
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-slate-900 flex items-center justify-between px-6 shadow-md z-50">
-      {/* Left */}
+      {/* Left Section */}
       <div className="flex items-center gap-4">
         <button
           onClick={toggleSidebar}
-          className="text-white hover:text-orange-500 transition"
+          className="text-white hover:text-orange-500 transition-colors p-1"
+          aria-label="Toggle Sidebar"
         >
           <FaBars size={20} />
         </button>
 
-        <h1 className="text-white text-xl font-semibold">
-          RecruitIQ
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-white text-xl font-semibold tracking-tight">
+            RecruitIQ
+          </h1>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${
+            isAdmin ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
+          }`}>
+            {isAdmin ? 'Admin' : 'Candidate'}
+          </span>
+        </div>
       </div>
 
-      {/* Right */}
+      {/* Right Section */}
       <div className="flex items-center gap-4">
-        <p className="hidden md:block text-slate-300">
+        {/* User Greeting - Desktop */}
+        <p className="hidden md:block text-slate-300 text-sm">
           Welcome,
           <span className="text-white font-semibold ml-1">
             {user?.name || "User"}
           </span>
         </p>
 
+        {/* Role Badge */}
+        <span className={`hidden sm:inline-block text-xs px-2 py-0.5 rounded-full ${
+          isAdmin ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'
+        }`}>
+          {isAdmin ? 'Administrator' : 'Candidate'}
+        </span>
+
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={toggleDropdown}
-            className="text-slate-300 hover:text-orange-500 transition focus:outline-none"
+            className="flex items-center gap-2 text-slate-300 hover:text-orange-500 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 rounded-full p-1"
+            aria-label="Profile Menu"
           >
-            <FaUserCircle size={32} />
+            {user?.profile_picture ? (
+              <img 
+                src={user.profile_picture} 
+                alt="Profile" 
+                className="w-8 h-8 rounded-full object-cover border-2 border-slate-600"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white text-sm font-semibold">
+                {getInitials(user?.name)}
+              </div>
+            )}
+            <FaUserCircle size={32} className="hidden sm:block" />
           </button>
 
           {/* Dropdown Menu */}
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden animate-fadeIn">
-              {/* User Info */}
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
+            <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden animate-fadeIn">
+              {/* User Info Header */}
+              <div className="px-4 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
                 <div className="flex items-center gap-3">
-                  <FaUserCircle size={40} className="text-slate-400" />
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                  {user?.profile_picture ? (
+                    <img 
+                      src={user.profile_picture} 
+                      alt="Profile" 
+                      className="w-12 h-12 rounded-full object-cover border-2 border-slate-300"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-slate-300 flex items-center justify-center text-slate-700 text-lg font-bold">
+                      {getInitials(user?.name)}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
                       {user?.name || "User"}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 truncate">
                       {user?.email || "user@example.com"}
                     </p>
+                    <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
+                      isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {isAdmin ? 'Admin' : 'Candidate'}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Menu Items */}
               <div className="py-1">
+                {/* Logout */}
                 <button
                   onClick={() => {
                     setShowDropdown(false);
