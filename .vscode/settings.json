@@ -3,6 +3,9 @@
         "canadmin",
         "candidateprofile",
         "corsheaders",
+        "frombuffer",
+        "imdecode",
+        "IMREAD",
         "simplejwt",
         "Toastify"
     ]

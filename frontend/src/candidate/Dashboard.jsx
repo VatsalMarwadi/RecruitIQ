@@ -67,7 +67,6 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       
-      // Fetch available drives for the institute
       const drivesRes = await api.get("/candidate/get-available-drives/", {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -83,7 +82,6 @@ const Dashboard = () => {
         const availableDrives = drivesRes.data.data || [];
         totalDrives = availableDrives.length;
         
-        // For each drive, check if user has attempts
         for (const drive of availableDrives) {
           try {
             const roundStatusRes = await api.get(`/candidate/get-candidate-round-status/${drive.id}/`, {
@@ -97,7 +95,6 @@ const Dashboard = () => {
               if (hasAttempt) {
                 attemptedDrivesCount++;
                 
-                // Check for in-progress rounds
                 const inProgressRounds = rounds.filter(r => r.final_status === "In Progress");
                 const completedRoundsList = rounds.filter(r => 
                   r.final_status === "Passed" || 
@@ -121,7 +118,6 @@ const Dashboard = () => {
                   };
                 }
 
-                // Collect results grouped by drive
                 if (completedRoundsList.length > 0) {
                   const driveResultsList = completedRoundsList.map(round => ({
                     roundId: round.round_id,
@@ -152,7 +148,6 @@ const Dashboard = () => {
           }
         }
         
-        // Convert to array and sort by drive with most recent first
         const sortedDrives = Object.values(resultsByDrive).sort((a, b) => {
           const aLatest = a.rounds.reduce((max, r) => r.submittedAt > max ? r.submittedAt : max, '');
           const bLatest = b.rounds.reduce((max, r) => r.submittedAt > max ? r.submittedAt : max, '');
@@ -161,7 +156,6 @@ const Dashboard = () => {
         
         setDriveResults(sortedDrives);
         
-        // Auto-expand first drive if any
         if (sortedDrives.length > 0) {
           setExpandedDrives({ [sortedDrives[0].driveId]: true });
         }
@@ -176,7 +170,6 @@ const Dashboard = () => {
 
       setNextAssessment(nextAssessmentData);
 
-      // Fetch profile data
       try {
         const profileRes = await api.get("/candidate/get-candidate-profile/", {
           headers: { Authorization: `Bearer ${token}` }
@@ -255,63 +248,20 @@ const Dashboard = () => {
       >
         <div className="p-6 min-h-[calc(100vh-64px)]">
           {isDashboardRoute ? (
-            <>
+            <div className="max-w-6xl mx-auto">
               {/* ============================================================ */}
-              {/* Profile Section */}
+              {/* Greeting Message */}
               {/* ============================================================ */}
-              <div className="mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xl flex-shrink-0">
-                    {user?.name?.charAt(0)?.toUpperCase() || "C"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                          {getGreeting()}, {user?.name || "Candidate"}
-                        </h2>
-                        <p className="text-gray-500 text-sm">{user?.email}</p>
-                        {institute && (
-                          <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                            <FaBuilding className="text-gray-400" />
-                            <span>{typeof institute === 'object' ? institute.name : institute || "Your Institute"}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-xs font-medium ${profileData ? 'text-green-600' : 'text-yellow-600'}`}>
-                            {profileData ? 'Profile Complete' : 'Profile Incomplete'}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => navigate("/candidate/profile")}
-                        className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 text-sm font-medium rounded-lg transition-colors"
-                      >
-                        {profileData ? 'Update Profile' : 'Create Profile'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {getGreeting()}, {user?.name || "Candidate"}
+                </h1>
               </div>
-
-              {/* Profile Warning */}
-              {showProfileWarning && (
-                <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
-                  <FaExclamationTriangle className="text-yellow-600 mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-yellow-800">Complete Your Profile</h4>
-                    <p className="text-sm text-yellow-700">
-                      Complete your profile to increase your chances of getting shortlisted.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* ============================================================ */}
               {/* Statistics Cards */}
               {/* ============================================================ */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                       <FaBriefcase className="w-6 h-6" />
@@ -323,7 +273,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center text-green-600">
                       <FaRocket className="w-6 h-6" />
@@ -335,7 +285,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
                       <FaTrophy className="w-6 h-6" />
@@ -347,7 +297,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
                       <FaClock className="w-6 h-6" />
@@ -364,9 +314,9 @@ const Dashboard = () => {
               {/* Next Assessment */}
               {/* ============================================================ */}
               {nextAssessment && (
-                <div className="mb-8">
-                  <h3 className="font-semibold text-gray-900 mb-4">Next Assessment</h3>
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Next Assessment</h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
                     <div className="flex items-start md:items-center justify-between gap-4 flex-wrap">
                       <div className="flex items-start gap-4">
                         <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -399,11 +349,11 @@ const Dashboard = () => {
               {/* ============================================================ */}
               {driveResults.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Your Results</h3>
-                  <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900 mb-3">Your Results</h3>
+                  <div className="space-y-3">
                     {driveResults.map((drive) => (
                       <div key={drive.driveId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        {/* Drive Header - Clickable to expand */}
+                        {/* Drive Header */}
                         <div 
                           className="p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
                           onClick={() => toggleDriveExpand(drive.driveId)}
@@ -480,7 +430,9 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Show message when no drives are available */}
+              {/* ============================================================ */}
+              {/* Empty States */}
+              {/* ============================================================ */}
               {stats.totalDrives === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -494,7 +446,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Show message when no results */}
               {stats.totalDrives > 0 && driveResults.length === 0 && stats.attemptedDrives > 0 && (
                 <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -506,7 +457,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Show message when no drives attempted */}
               {stats.totalDrives > 0 && stats.attemptedDrives === 0 && (
                 <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -522,7 +472,7 @@ const Dashboard = () => {
                   </button>
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <Outlet />
           )}

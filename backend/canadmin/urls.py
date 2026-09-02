@@ -45,4 +45,5 @@ urlpatterns = [
     path("confirm-round-results/<int:round_id>/", views.ConfirmRoundResults, name="confirm-round-results"),
 
     path('get-user-drive-attempts/<int:user_id>/', views.GetUserDriveAttempts, name='get_user_drive_attempts'),
+    path("review-education/<int:education_id>/", views.ReviewEducation, name="review-education"),
 ]

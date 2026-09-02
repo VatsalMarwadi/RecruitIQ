@@ -16,6 +16,7 @@ from .serializers import (CandidateProfileSerializer, EducationSerializer, Exper
 from .services.execution_service import execute_code
 from canadmin.models import (CodingQuestionSubmissionModel, DriveModel, RoundCandidateDecisionModel, RoundModel, AptitudeQuestionModel, RoundAttemptModel, AptitudeAnswerModel, CodingQuestionModel, CodingSubmissionModel, CodingTestCaseModel)
 from canadmin.services import AutoStatusService
+from .services.ocr_service import verify_education_document
 
 logger = logging.getLogger(__name__)
 
@@ -294,79 +295,82 @@ def AddOrUpdateEducation(request):
     data = request.data.copy()
     if education_id:
         try:
-            education = Education.objects.get(
-                id=education_id,
-                user=request.user
-            )
+            education = Education.objects.get(id=education_id, user=request.user)
         except Education.DoesNotExist:
             return Response(
-                {
-                    "success": False,
-                    "message": "Education record not found."
-                },
+                {"success": False, "message": "Education record not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
     else:
         education = None
+
     try:
+        verification_message = None
+        verification_status_result = None
+
         if "degree_image" in request.FILES:
             image = request.FILES["degree_image"]
+
+            verification_status_result, verification_message = verify_education_document(
+                candidate_name=request.user.name,
+                education_data={
+                    "institute": data.get("institute", ""),
+                    "degree": data.get("degree", ""),
+                    "marks": data.get("marks", ""),
+                },
+                image_file=image,
+            )
+
+            if verification_status_result == "rejected":
+                return Response(
+                    {"success": False, "message": verification_message},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             upload = cloudinary.uploader.upload(
-                image,
-                folder="degree_images",
-                resource_type="image"
+                image, folder="degree_images", resource_type="image"
             )
             if education and education.degree_image:
                 old_public_id = get_public_id(education.degree_image)
                 if old_public_id:
-                    cloudinary.uploader.destroy(
-                        old_public_id,
-                        resource_type="image"
-                    )
+                    cloudinary.uploader.destroy(old_public_id, resource_type="image")
             data["degree_image"] = upload["secure_url"]
+
+        # NOTE: verification_status is read_only on EducationSerializer,
+        # so it CANNOT be set via `data[...]` — the serializer would
+        # silently drop it during validation. It must be passed directly
+        # into .save() instead, below.
+
         if education:
             serializer = EducationSerializer(education, data=data, partial=True, context={"request": request})
         else:
             serializer = EducationSerializer(data=data, context={"request": request})
+
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            save_kwargs = {"user": request.user}
+            if verification_status_result is not None:
+                save_kwargs["verification_status"] = verification_status_result
+
+            serializer.save(**save_kwargs)
+
+            default_message = "Education Updated Successfully!" if education_id else "Education Added Successfully!"
             return Response(
                 {
                     "success": True,
-                    "message": (
-                        "Education Updated Successfully!"
-                        if education_id
-                        else "Education Added Successfully!"
-                    ),
-                    "data": serializer.data
+                    "message": verification_message or default_message,
+                    "data": serializer.data,
                 },
-                status=status.HTTP_200_OK
-                if education_id
-                else status.HTTP_201_CREATED,
+                status=status.HTTP_200_OK if education_id else status.HTTP_201_CREATED,
             )
-        return Response(
-            {
-                "success": False,
-                "errors": serializer.errors,
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
     except IntegrityError:
         return Response(
-            {
-                "success": False,
-                "message": "This Education already exists."
-            },
+            {"success": False, "message": "This Education already exists."},
             status=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
-        return Response(
-            {
-                "success": False,
-                "message": str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return Response({"success": False, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

@@ -2962,3 +2962,33 @@ def GetUserDriveAttempts(request, user_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def ReviewEducation(request, education_id):
+    """Approve or reject a pending education record."""
+    if request.user.role != "admin":
+        return Response({"success": False, "message": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
+    decision = request.data.get("decision")  # "verified" or "rejected"
+    notes = request.data.get("notes", "")
+
+    if decision not in ["verified", "rejected"]:
+        return Response(
+            {"success": False, "message": "decision must be 'verified' or 'rejected'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        education = Education.objects.get(id=education_id, user__institute=request.user.institute)
+    except Education.DoesNotExist:
+        return Response({"success": False, "message": "Record not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    education.verification_status = decision
+    education.verification_notes = notes
+    education.save(update_fields=["verification_status", "verification_notes"])
+
+    return Response(
+        {"success": True, "message": f"Education record marked as {decision}."},
+        status=status.HTTP_200_OK,
+    )

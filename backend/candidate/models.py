@@ -39,6 +39,13 @@ class Education(models.Model):
     institute = models.CharField(max_length=100)
     degree = models.CharField(max_length=100)
     field = models.CharField(max_length=100)
+    VERIFICATION_STATUS_OPTIONS = (
+        ("verified", "Verified"),
+        ("pending_review", "Pending Manual Review"),
+        ("rejected", "Rejected"),
+    )
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_OPTIONS, default="pending_review")
+    verification_notes = models.TextField(blank=True)
     start_year = models.PositiveIntegerField(validators=[MinValueValidator(1900), MaxValueValidator(current_year + 10)])
     end_year = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1900), MaxValueValidator(current_year + 10)])
     is_current = models.BooleanField(default=False)

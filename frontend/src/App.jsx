@@ -8,7 +8,7 @@ import Signup from "./authentication/Signup";
 import ForgotPassword from "./authentication/ForgotPassword";
 
 // Candidate Components
-import Dashboard from "./candidate/Dashboard";
+import Dashboard from "./candidate/Dashboard"; // This has Navbar + Sidebar
 import { ResumeBuilder } from "./candidate/ResumeBuilder";
 import CandidateDrive from "./candidate/CandidateDrive";
 import { DriveDetails } from "./candidate/drive/DriveDetails";
@@ -31,7 +31,7 @@ import { Certifications } from "./candidate/profile/Certifications";
 import { Languages } from "./candidate/profile/Languages";
 
 // Admin Components
-import AdminDashboard from "./admin/AdminDashboard";
+import AdminDashboardContent from "./admin/AdminDashboard"; // Rename import to make it clear it's content
 import AdminUsers from "./admin/pages/users/UserList";
 import UserDetails from "./admin/pages/users/UserDetails";
 import Institute from "./admin/pages/institute/InstituteList";
@@ -93,30 +93,19 @@ function App() {
           path="/candidate"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Dashboard /> {/* This has Navbar + Sidebar */}
             </ProtectedRoute>
           }
         >
-          {/* Dashboard Overview */}
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
-          
-          {/* Resume Builder */}
           <Route path="resume" element={<ResumeBuilder />} />
-          
-          {/* Drive Routes */}
           <Route path="drive" element={<CandidateDrive />} />
           <Route path="drive/:driveId" element={<DriveDetails />} />
-
-          {/* Aptitude Routes */}
           <Route path="aptitude/:roundId/instructions" element={<AptitudeInstructions />} />
           <Route path="aptitude/:roundId/test" element={<AptitudeTest />} />
-
-          {/* Coding Routes */}
           <Route path="coding/:roundId/instructions" element={<CodingInstructions />} />
           <Route path="coding/:roundId/test" element={<CodingTest />} />
-
-          {/* Profile Routes */}
           <Route path="profile" element={<PersonalInfo />} />
           <Route path="profile/education" element={<Education />} />
           <Route path="profile/experience" element={<Experience />} />
@@ -124,49 +113,43 @@ function App() {
           <Route path="profile/projects" element={<Projects />} />
           <Route path="profile/certifications" element={<Certifications />} />
           <Route path="profile/languages" element={<Languages />} />
-
-          {/* Settings */}
           <Route path="settings" element={<h1 className="text-2xl font-bold">Settings</h1>} />
-          
-          {/* Fallback for any unmatched candidate routes */}
           <Route path="*" element={<Navigate to="/candidate/dashboard" replace />} />
         </Route>
 
         {/* ============================================ */}
-        {/* ADMIN ROUTES */}
+        {/* ADMIN ROUTES - Using the same Dashboard layout */}
         {/* ============================================ */}
         <Route
           path="/admin"
           element={
             <ProtectedRoute>
-              <AdminDashboard />
+              <Dashboard /> {/* Reuse the same layout with Navbar + Sidebar */}
             </ProtectedRoute>
           }
         >
-          {/* /admin/dashboard */}
-          <Route
-            path="dashboard"
-            element={<h1 className="text-2xl font-bold">Admin Dashboard</h1>}
-          />
+          {/* Index route redirects to dashboard */}
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          
+          {/* Dashboard with charts and insights - this is the content */}
+          <Route path="dashboard" element={<AdminDashboardContent />} />
 
-          {/* /admin/users */}
+          {/* Users */}
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:id" element={<UserDetails />} />
 
-          {/* /admin/institute */}
+          {/* Institutes */}
           <Route path="institute" element={<Institute />} />
           <Route path="institute/add" element={<InstituteForm />} />
           <Route path="institute/edit/:id" element={<InstituteForm />} />
 
-          {/* /admin/drive */}
+          {/* Drives */}
           <Route path="drive" element={<Drive />} />
           <Route path="drive/add" element={<DriveForm />} />
           <Route path="drive/edit/:id" element={<DriveForm />} />
-          
-          {/* /admin/drive/view/:id */}
           <Route path="drive/view/:id" element={<ViewDrive />} />
 
-          {/* /admin/drive/:driveId/rounds */}
+          {/* Rounds */}
           <Route path="drive/:driveId/rounds/add" element={<RoundForm />} />
           <Route path="drive/:driveId/rounds/edit/:roundId" element={<RoundForm />} />
 

@@ -23,16 +23,21 @@ class EducationSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     name = serializers.CharField(source="user.name", read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
-    
+    verification_status_display = serializers.CharField(source="get_verification_status_display", read_only=True)
+
     class Meta:
         model = Education
         fields = [
-            'id', 'user_id', 'name', 'email', 'institute', 'degree', 
-            'field', 'start_year', 'end_year', 'is_current', 
-            'evaluation_format', 'marks', 'degree_image', 'description', 
+            'id', 'user_id', 'name', 'email', 'institute', 'degree',
+            'field', 'start_year', 'end_year', 'is_current',
+            'evaluation_format', 'marks', 'degree_image', 'description',
+            'verification_status', 'verification_status_display', 'verification_notes',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user_id', 'name', 'email', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id', 'user_id', 'name', 'email', 'created_at', 'updated_at',
+            'verification_status', 'verification_notes',
+        ]
 
 class ExperienceSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)

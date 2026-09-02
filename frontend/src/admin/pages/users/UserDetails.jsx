@@ -42,6 +42,7 @@ export default function UserDetails() {
   const [userData, setUserData] = useState(null);
   const [driveAttempts, setDriveAttempts] = useState([]);
   const [loadingDrives, setLoadingDrives] = useState(false);
+  const [reviewingId, setReviewingId] = useState(null);
 
   useEffect(() => {
     fetchUserDetails();
@@ -175,6 +176,33 @@ export default function UserDetails() {
       toast.info(
         "Detailed results are only available for aptitude and coding rounds",
       );
+    }
+  };
+
+  const handleReviewEducation = async (educationId, decision) => {
+    const notes =
+      decision === "rejected"
+        ? window.prompt("Optional note for the candidate (why rejected):") || ""
+        : "";
+    try {
+      setReviewingId(educationId);
+      const response = await api.post(
+        `/canadmin/review-education/${educationId}/`,
+        { decision, notes },
+        authHeader(),
+      );
+      if (response.data.success) {
+        toast.success(response.data.message);
+        fetchUserDetails(); // refresh so the badge/buttons update
+      } else {
+        toast.error(response.data.message || "Failed to update review status");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update review status",
+      );
+    } finally {
+      setReviewingId(null);
     }
   };
 
@@ -471,9 +499,26 @@ export default function UserDetails() {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h5 className="font-semibold text-gray-900">
-                        {edu.degree}
-                      </h5>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h5 className="font-semibold text-gray-900">
+                          {edu.degree}
+                        </h5>
+                        {edu.verification_status === "verified" && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
+                            <FaCheckCircle size={10} /> Verified
+                          </span>
+                        )}
+                        {edu.verification_status === "pending_review" && (
+                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full flex items-center gap-1">
+                            <FaClock size={10} /> Pending Review
+                          </span>
+                        )}
+                        {edu.verification_status === "rejected" && (
+                          <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full flex items-center gap-1">
+                            <FaTimesCircle size={10} /> Rejected
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 flex items-center gap-1.5 mt-0.5">
                         <FaUniversity size={12} className="text-gray-400" />
                         {edu.institute}
@@ -488,6 +533,11 @@ export default function UserDetails() {
                           {edu.description}
                         </p>
                       )}
+                      {edu.verification_notes && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Note: {edu.verification_notes}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right flex-shrink-0">
                       <span className="text-xs text-gray-500">
@@ -499,8 +549,9 @@ export default function UserDetails() {
                       </p>
                     </div>
                   </div>
-                  {edu.degree_image && (
-                    <div className="mt-2 pt-2 border-t border-gray-200">
+
+                  <div className="mt-2 pt-2 border-t border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                    {edu.degree_image ? (
                       <a
                         href={edu.degree_image}
                         target="_blank"
@@ -510,8 +561,35 @@ export default function UserDetails() {
                         <FaExternalLinkAlt size={10} />
                         View Certificate
                       </a>
-                    </div>
-                  )}
+                    ) : (
+                      <span className="text-xs text-gray-400">
+                        No certificate uploaded
+                      </span>
+                    )}
+
+                    {edu.verification_status === "pending_review" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            handleReviewEducation(edu.id, "verified")
+                          }
+                          disabled={reviewingId === edu.id}
+                          className="px-3 py-1 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleReviewEducation(edu.id, "rejected")
+                          }
+                          disabled={reviewingId === edu.id}
+                          className="px-3 py-1 text-xs bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             )}

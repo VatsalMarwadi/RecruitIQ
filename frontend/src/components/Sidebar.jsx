@@ -14,6 +14,8 @@ import {
   FaBuilding,
   FaChevronDown,
   FaChevronRight,
+  FaChartBar,
+  FaCog,
 } from "react-icons/fa";
 
 export default function Sidebar({ isOpen }) {
@@ -29,6 +31,10 @@ export default function Sidebar({ isOpen }) {
     }
   }, []);
 
+  // Determine if we're in admin or candidate section
+  const isAdmin = location.pathname.startsWith("/admin");
+  const isCandidate = location.pathname.startsWith("/candidate");
+
   // Auto-expand Profile menu if any sub-item is active
   useEffect(() => {
     const isProfileActive = location.pathname.startsWith("/candidate/profile");
@@ -39,8 +45,6 @@ export default function Sidebar({ isOpen }) {
       }));
     }
   }, [location.pathname]);
-
-  const isAdmin = location.pathname.startsWith("/admin");
 
   // Toggle menu expansion
   const toggleMenu = (path, e) => {
@@ -53,7 +57,6 @@ export default function Sidebar({ isOpen }) {
 
   // Handle parent menu click
   const handleParentClick = (path, hasSubItems, isExpanded, e) => {
-    // Don't navigate if clicking on the arrow
     if (e.target.closest('.toggle-arrow')) {
       return;
     }
@@ -113,10 +116,24 @@ export default function Sidebar({ isOpen }) {
     { path: "/admin/dashboard", icon: <FaHome />, label: "Dashboard", subItems: [] },
     { path: "/admin/users", icon: <FaUser />, label: "Users", subItems: [] },
     { path: "/admin/institute", icon: <FaBuilding />, label: "Institutes", subItems: [] },
-    { path: "/admin/drive", icon: <FaBriefcase />, label: "Drives", subItems: [] },
+    { path: "/admin/drive", icon: <FaBriefcase />, label: "Drives", subItems: [] }
   ];
 
-  const menuItems = isAdmin ? adminMenuItems : candidateMenuItems;
+  // Determine which menu to show
+  let menuItems = [];
+  let roleLabel = "";
+
+  if (isAdmin) {
+    menuItems = adminMenuItems;
+    roleLabel = "Administration";
+  } else if (isCandidate) {
+    menuItems = candidateMenuItems;
+    roleLabel = "Candidate Portal";
+  } else {
+    // Default to candidate if no path matches
+    menuItems = candidateMenuItems;
+    roleLabel = "Candidate Portal";
+  }
 
   return (
     <aside
@@ -129,7 +146,7 @@ export default function Sidebar({ isOpen }) {
           {/* Role Header */}
           {isOpen && (
             <div className="px-3 py-2 mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider border-b border-slate-200">
-              {isAdmin ? "Administration" : "Candidate Portal"}
+              {roleLabel}
             </div>
           )}
 
@@ -137,13 +154,8 @@ export default function Sidebar({ isOpen }) {
             const hasSubItems = item.subItems.length > 0;
             const isExpanded = expandedMenus[item.path] || false;
             
-            // Check if this specific route is active
             const isThisRouteActive = location.pathname === item.path;
-            
-            // Check if any sub-item is active
             const isSubItemActive = hasActiveSub(item.subItems);
-            
-            // Parent should be highlighted if it's the exact route OR a sub-item is active
             const shouldHighlightParent = isThisRouteActive || isSubItemActive;
 
             return (
@@ -165,7 +177,6 @@ export default function Sidebar({ isOpen }) {
                     <span className="text-sm font-medium flex-1">{item.label}</span>
                   )}
                   
-                  {/* Toggle Arrow - Inside the highlighted area */}
                   {isOpen && hasSubItems && (
                     <span
                       className={`toggle-arrow ml-auto text-xs transition-all duration-200 cursor-pointer hover:opacity-70 ${
@@ -178,11 +189,10 @@ export default function Sidebar({ isOpen }) {
                   )}
                 </div>
 
-                {/* Sub-items - Only show when expanded */}
+                {/* Sub-items */}
                 {isOpen && hasSubItems && isExpanded && (
                   <div className="ml-6 mt-1 space-y-0.5 border-l-2 border-slate-200 pl-3">
                     {item.subItems.map((subItem) => {
-                      // Check if this specific sub-item is active
                       const isThisSubActive = location.pathname === subItem.path;
                       
                       return (

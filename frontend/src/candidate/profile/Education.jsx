@@ -65,9 +65,9 @@ export const Education = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      
+
       const payload = new FormData();
-      
+
       const fields = {
         degree: formData.degree.trim(),
         institute: formData.institute.trim(),
@@ -116,7 +116,7 @@ export const Education = () => {
       }
     } catch (error) {
       console.error('Error saving education:', error);
-      
+
       if (error.response?.data?.errors) {
         const errors = error.response.data.errors;
         const errorMessages = Object.values(errors).flat();
@@ -184,6 +184,28 @@ export const Education = () => {
     }
   };
 
+  // Small helper to render the verification badge next to degree/institute.
+  // pending_review and rejected are shown to the candidate so they know
+  // whether a record still needs admin attention; "verified" records show
+  // no badge at all to keep the default (most common) state visually quiet.
+  const renderVerificationBadge = (statusValue) => {
+    if (statusValue === 'pending_review') {
+      return (
+        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+          Pending Review
+        </span>
+      );
+    }
+    if (statusValue === 'rejected') {
+      return (
+        <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+          Rejected
+        </span>
+      );
+    }
+    return null;
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -206,6 +228,7 @@ export const Education = () => {
                   {edu.is_current && (
                     <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">Current</span>
                   )}
+                  {renderVerificationBadge(edu.verification_status)}
                 </div>
                 <div className="flex items-center gap-4 mt-1 flex-wrap">
                   {edu.field && <p className="text-xs text-gray-500">Field: {edu.field}</p>}
@@ -219,19 +242,29 @@ export const Education = () => {
                     </a>
                   )}
                 </div>
+                {edu.verification_status === 'pending_review' && (
+                  <p className="text-xs text-yellow-700 mt-1">
+                    Your certificate is awaiting admin verification.
+                  </p>
+                )}
+                {edu.verification_status === 'rejected' && edu.verification_notes && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Rejected: {edu.verification_notes}
+                  </p>
+                )}
                 {edu.description && (
                   <p className="text-xs text-gray-500 mt-1">{edu.description}</p>
                 )}
               </div>
               <div className="flex gap-2 ml-4">
-                <button 
-                  onClick={() => handleEdit(edu)} 
+                <button
+                  onClick={() => handleEdit(edu)}
                   className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                 >
                   Edit
                 </button>
-                <button 
-                  onClick={() => handleDelete(edu.id)} 
+                <button
+                  onClick={() => handleDelete(edu.id)}
                   className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                 >
                   Delete
@@ -253,35 +286,35 @@ export const Education = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Degree *</label>
-              <input 
-                type="text" 
-                name="degree" 
-                value={formData.degree} 
-                onChange={handleChange} 
-                placeholder="B.Sc. Computer Science" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              <input
+                type="text"
+                name="degree"
+                value={formData.degree}
+                onChange={handleChange}
+                placeholder="B.Sc. Computer Science"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Institute *</label>
-              <input 
-                type="text" 
-                name="institute" 
-                value={formData.institute} 
-                onChange={handleChange} 
-                placeholder="University Name" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              <input
+                type="text"
+                name="institute"
+                value={formData.institute}
+                onChange={handleChange}
+                placeholder="University Name"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Field of Study</label>
-              <input 
-                type="text" 
-                name="field" 
-                value={formData.field} 
-                onChange={handleChange} 
-                placeholder="Computer Science" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              <input
+                type="text"
+                name="field"
+                value={formData.field}
+                onChange={handleChange}
+                placeholder="Computer Science"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -300,87 +333,87 @@ export const Education = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Marks / Grade</label>
-              <input 
-                type="text" 
-                name="marks" 
-                value={formData.marks} 
-                onChange={handleChange} 
-                placeholder="85% or 3.8" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              <input
+                type="text"
+                name="marks"
+                value={formData.marks}
+                onChange={handleChange}
+                placeholder="85% or 3.8"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Year</label>
-              <input 
-                type="number" 
-                name="start_year" 
-                value={formData.start_year} 
-                onChange={handleChange} 
-                placeholder="2020" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              <input
+                type="number"
+                name="start_year"
+                value={formData.start_year}
+                onChange={handleChange}
+                placeholder="2020"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">End Year</label>
-              <input 
-                type="number" 
-                name="end_year" 
-                value={formData.end_year} 
-                onChange={handleChange} 
-                placeholder="2024" 
-                disabled={formData.is_current} 
+              <input
+                type="number"
+                name="end_year"
+                value={formData.end_year}
+                onChange={handleChange}
+                placeholder="2024"
+                disabled={formData.is_current}
                 className={`w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   formData.is_current ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`} 
+                }`}
               />
             </div>
             <div className="flex items-center">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  name="is_current" 
-                  checked={formData.is_current} 
-                  onChange={handleChange} 
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                <input
+                  type="checkbox"
+                  name="is_current"
+                  checked={formData.is_current}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Currently studying</span>
               </label>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Degree Certificate</label>
-              <input 
-                type="file" 
-                name="degree_image" 
-                onChange={handleImageChange} 
-                accept="image/*" 
+              <input
+                type="file"
+                name="degree_image"
+                onChange={handleImageChange}
+                accept="image/*"
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
               <p className="text-xs text-gray-500 mt-1">Upload degree certificate or diploma (max 5MB)</p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea 
-                name="description" 
-                value={formData.description} 
-                onChange={handleChange} 
-                placeholder="Describe your academic achievements, relevant coursework, or any special recognition..." 
-                rows="3" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Describe your academic achievements, relevant coursework, or any special recognition..."
+                rows="3"
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
             </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             {editingId && (
-              <button 
-                onClick={resetForm} 
+              <button
+                onClick={resetForm}
                 className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
             )}
-            <button 
-              onClick={handleSubmit} 
-              disabled={saving} 
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving ? (
