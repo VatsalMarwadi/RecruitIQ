@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import InstituteModel, DriveModel, RoundAttemptModel, RoundCandidateDecisionModel, RoundModel, AptitudeQuestionModel, CodingQuestionModel, CodingTestCaseModel
+from authentication.models import UserTable
+from .models import DriveCandidateModel, InstituteModel, DriveModel, RoundAttemptModel, RoundCandidateDecisionModel, RoundModel, AptitudeQuestionModel, CodingQuestionModel, CodingTestCaseModel
 
 class InstituteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,20 +8,93 @@ class InstituteSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code', 'city', 'state', 'country', 'tpo_name', 'tpo_email', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['id', 'is_active', 'created_at', 'updated_at']
 
+class DriveCandidateSerializer(serializers.ModelSerializer):
+    candidate_name = serializers.SerializerMethodField()
+    candidate_email = serializers.EmailField(source="candidate.email", read_only=True)
+    class Meta:
+        model = DriveCandidateModel
+        fields = ["id", "candidate", "candidate_name", "candidate_email", "is_active", "assigned_at"]
+    def get_candidate_name(self, obj):
+        return getattr(obj.candidate, "name", None) or obj.candidate.email
+
 class DriveSerializer(serializers.ModelSerializer):
-    institute_details = InstituteSerializer(source='institute', read_only=True)
-    
+    institute_details = InstituteSerializer(source="institute", read_only=True)
+    candidate_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        write_only=True,
+        required=False,
+    )
+    assigned_candidates = serializers.SerializerMethodField()
+
     class Meta:
         model = DriveModel
-        fields = ['id', 'title', 'job_role', 'description', 'ctc', 'job_location', 
-                  'institute', 'institute_details', 'status', 'drive_date_time', 
-                  'created_at', 'updated_at']
+        fields = [
+            'id', 'title', 'job_role', 'description', 'ctc', 'job_location',
+            'institute', 'institute_details', 'status', 'drive_date_time',
+            'candidate_ids', 'assigned_candidates',
+            'created_at', 'updated_at',
+        ]
         read_only_fields = ['id', 'status', 'created_at', 'updated_at']
-    
+
+    # ---------------- POP candidate_ids BEFORE SAVE ----------------
+    def create(self, validated_data):
+        validated_data.pop("candidate_ids", None)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("candidate_ids", None)
+        return super().update(instance, validated_data)
+
+    # ---------------- READ: assigned_candidates ----------------
+    def get_assigned_candidates(self, obj):
+        try:
+            assignments = obj.assigned_candidates.filter(
+                is_active=True
+            ).select_related("candidate")
+            return DriveCandidateSerializer(assignments, many=True).data
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(
+                f"assigned_candidates failed for drive {obj.id}: {e}"
+            )
+            return []
+
+    # ---------------- VALIDATE: candidate_ids ----------------
+    def validate_candidate_ids(self, value):
+        if value is None:
+            return value
+        institute_id = self.initial_data.get("institute") or (
+            self.instance.institute_id if self.instance else None
+        )
+        if not institute_id:
+            raise serializers.ValidationError(
+                "institute is required before assigning candidates."
+            )
+
+        # Try direct field first, fall back to profile__institute
+        try:
+            valid_ids = set(
+                UserTable.objects.filter(
+                    id__in=value, role="candidate", institute_id=institute_id
+                ).values_list("id", flat=True)
+            )
+        except Exception:
+            valid_ids = set(
+                UserTable.objects.filter(
+                    id__in=value, role="candidate",
+                    profile__institute_id=institute_id
+                ).values_list("id", flat=True)
+            )
+
+        invalid = set(value) - valid_ids
+        if invalid:
+            raise serializers.ValidationError(
+                f"These candidate IDs don't belong to the selected institute: {sorted(invalid)}"
+            )
+        return value
+
     def validate(self, data):
-        # For editing, status cannot be changed through API
         if self.instance and 'status' in data:
-            # Remove status from data if it's being sent
             data.pop('status', None)
         return data
 
@@ -119,9 +193,10 @@ class DriveRoundSerializer(serializers.ModelSerializer):
 class DriveDetailsSerializer(serializers.ModelSerializer):
     institute = InstituteSerializer(read_only=True)
     rounds = DriveRoundSerializer(many=True, read_only=True)
+    assigned_candidates = DriveCandidateSerializer(many=True, read_only=True)
     class Meta:
         model = DriveModel
-        fields = ['id', 'title', 'job_role', 'description', 'ctc', 'job_location', 'institute', 'status', 'drive_date_time', 'rounds', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'job_role', 'description', 'ctc', 'job_location', 'institute', 'status', 'drive_date_time', 'rounds', 'assigned_candidates', 'created_at', 'updated_at']
 
 class AptitudeQuestionSerializer(serializers.ModelSerializer):
     class Meta:

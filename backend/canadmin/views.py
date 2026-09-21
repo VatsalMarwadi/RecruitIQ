@@ -2,7 +2,7 @@ from django.db.models import Prefetch, Sum
 from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
-from .models import AptitudeAnswerModel, CodingQuestionSubmissionModel, CodingSubmissionModel, InstituteModel, DriveModel, RoundCandidateDecisionModel, RoundModel, AptitudeQuestionModel, CodingQuestionModel, RoundAttemptModel, CodingTestCaseModel
+from .models import AptitudeAnswerModel, CodingQuestionSubmissionModel, CodingSubmissionModel, DriveCandidateModel, InstituteModel, DriveModel, RoundCandidateDecisionModel, RoundModel, AptitudeQuestionModel, CodingQuestionModel, RoundAttemptModel, CodingTestCaseModel
 from .serializers import InstituteSerializer, DriveSerializer, RoundSerializer, CodingQuestionSerializer, DriveDetailsSerializer, UploadAptitudeQuestionSerializer, AptitudeQuestionSerializer, CodingTestCaseSerializer
 from .services import AutoStatusService
 from candidate.models import CandidateProfile, Education, Experience, Project, Skill, Certificate, Language
@@ -249,86 +249,75 @@ def UpdateInstituteStatus(request, institute_id):
 @permission_classes([IsAuthenticated])
 def AddUpdateDrive(request):
     if request.user.role != "admin":
-        return Response(
-            {
-                "success": False,
-                "message": "Permission denied."
-            },
-            status=status.HTTP_403_FORBIDDEN
-        )
+        return Response({"success": False, "message": "Permission denied."},
+                        status=status.HTTP_403_FORBIDDEN)
+
     drive_id = request.data.get("id")
-    
+    candidate_ids = request.data.get("candidate_ids", None)
+
     if drive_id:
         try:
             drive = DriveModel.objects.get(id=drive_id)
         except DriveModel.DoesNotExist:
-            return Response(
-                {
-                    "success": False,
-                    "message": "Drive not found."
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Prevent status change for completed or cancelled drives
+            return Response({"success": False, "message": "Drive not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+
         if drive.status in ["completed", "cancelled"]:
-            return Response(
-                {
-                    "success": False,
-                    "message": f"Cannot modify a {drive.status} drive."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Remove status from data - admin cannot change status directly
+            return Response({"success": False,
+                             "message": f"Cannot modify a {drive.status} drive."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data.copy()
-        if "status" in data:
-            data.pop("status")
-        
-        # Keep the original status
+        data.pop("status", None)
         data["status"] = drive.status
-        
+
         serializer = DriveSerializer(drive, data=data, partial=True)
-        if serializer.is_valid():
+        if not serializer.is_valid():
+            return Response({"success": False, "message": serializer.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
             drive = serializer.save()
-            return Response(
-                {
-                    "success": True,
-                    "message": "Drive Updated Successfully!!",
-                    "data": DriveSerializer(drive).data
-                },
-                status=status.HTTP_200_OK
-            )
-        return Response(
-            {
-                "success": False,
-                "message": serializer.errors
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    # New drive - always starts as draft
+            if candidate_ids is not None:
+                _sync_drive_candidates(drive, candidate_ids, request.user)
+
+        return Response({
+            "success": True,
+            "message": "Drive Updated Successfully!!",
+            "data": DriveSerializer(drive).data
+        }, status=status.HTTP_200_OK)
+
+    # --- New drive ---
     data = request.data.copy()
     data["status"] = "draft"
-    
+
     serializer = DriveSerializer(data=data)
-    if serializer.is_valid():
+    if not serializer.is_valid():
+        return Response({"success": False, "message": serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
         drive = serializer.save()
-        return Response(
-            {
-                "success": True,
-                "message": "Drive Added Successfully!!",
-                "data": DriveSerializer(drive).data
-            },
-            status=status.HTTP_201_CREATED
-        )
-    return Response(
-        {
-            "success": False,
-            "message": serializer.errors
-        },
-        status=status.HTTP_400_BAD_REQUEST
-    )
+        if candidate_ids:
+            _sync_drive_candidates(drive, candidate_ids, request.user)
+
+    return Response({
+        "success": True,
+        "message": "Drive Added Successfully!!",
+        "data": DriveSerializer(drive).data
+    }, status=status.HTTP_201_CREATED)
+
+def _sync_drive_candidates(drive, candidate_ids, admin_user):
+    """
+    Replace assignments on this drive to match candidate_ids.
+    Existing RoundAttemptModel history is never deleted.
+    """
+    candidate_ids = set(int(c) for c in candidate_ids)
+    # Deactivate (soft-remove) old assignments
+    DriveCandidateModel.objects.filter(drive=drive).exclude(candidate_id__in=candidate_ids).update(is_active=False)
+    # Create/reactivate the requested ones
+    for cid in candidate_ids:
+        DriveCandidateModel.objects.update_or_create(drive=drive, candidate_id=cid, defaults={"is_active": True, "assigned_by": admin_user})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -2992,3 +2981,87 @@ def ReviewEducation(request, education_id):
         {"success": True, "message": f"Education record marked as {decision}."},
         status=status.HTTP_200_OK,
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def GetInstituteCandidates(request, institute_id):
+    """Return candidates belonging to an institute (for admin selection)."""
+    if request.user.role != "admin":
+        return Response({"success": False, "message": "Permission denied."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    candidates = UserTable.objects.filter(
+        role="candidate",
+        institute_id=institute_id,
+        is_active=True
+    ).order_by("name", "email")
+
+    return Response({
+        "success": True,
+        "count": candidates.count(),
+        "data": [
+            {
+                "id": c.id,
+                "name": getattr(c, "name", None) or c.email,
+                "email": c.email,
+                "phone": getattr(c, "phone", None),
+            }
+            for c in candidates
+        ]
+    })
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def GetDriveAssignedCandidates(request, drive_id):
+    if request.user.role != "admin":
+        return Response({"success": False, "message": "Permission denied."},
+                        status=status.HTTP_403_FORBIDDEN)
+    assignments = DriveCandidateModel.objects.filter(
+        drive_id=drive_id, is_active=True
+    ).select_related("candidate")
+    return Response({
+        "success": True,
+        "data": DriveCandidateSerializer(assignments, many=True).data
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def AssignCandidatesToDrive(request, drive_id):
+    """Add candidates to an existing drive without touching existing ones."""
+    if request.user.role != "admin":
+        return Response({"success": False, "message": "Permission denied."},
+                        status=status.HTTP_403_FORBIDDEN)
+    try:
+        drive = DriveModel.objects.get(id=drive_id)
+    except DriveModel.DoesNotExist:
+        return Response({"success": False, "message": "Drive not found."},
+                        status=status.HTTP_404_NOT_FOUND)
+
+    candidate_ids = request.data.get("candidate_ids") or []
+    if not isinstance(candidate_ids, list) or not candidate_ids:
+        return Response({"success": False, "message": "candidate_ids must be a non-empty list."},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        _sync_drive_candidates(drive, candidate_ids, request.user)
+
+    return Response({
+        "success": True,
+        "message": f"{len(candidate_ids)} candidate(s) assigned."
+    })
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def UnassignCandidateFromDrive(request, drive_id, candidate_id):
+    if request.user.role != "admin":
+        return Response({"success": False, "message": "Permission denied."},
+                        status=status.HTTP_403_FORBIDDEN)
+    updated = DriveCandidateModel.objects.filter(
+        drive_id=drive_id, candidate_id=candidate_id
+    ).update(is_active=False)
+    if not updated:
+        return Response({"success": False, "message": "Assignment not found."},
+                        status=status.HTTP_404_NOT_FOUND)
+    return Response({"success": True, "message": "Candidate unassigned."})

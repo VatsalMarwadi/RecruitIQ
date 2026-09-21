@@ -4,7 +4,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../../configuration/api";
-import { FaArrowLeft, FaSave, FaInfoCircle } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaSave,
+  FaInfoCircle,
+  FaUserPlus,
+  FaTrash,
+} from "react-icons/fa";
+import CandidateSelector from "./CandidateSelector";
 
 export default function DriveForm() {
   const navigate = useNavigate();
@@ -14,6 +21,7 @@ export default function DriveForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [institutes, setInstitutes] = useState([]);
+
   const [formData, setFormData] = useState({
     title: "",
     job_role: "",
@@ -23,10 +31,15 @@ export default function DriveForm() {
     institute: "",
     drive_date_time: "",
   });
+
   const [currentStatus, setCurrentStatus] = useState("");
 
+  // Candidate selection state
+  const [selectedCandidates, setSelectedCandidates] = useState([]); // [{id, name, email}]
+  const [showSelector, setShowSelector] = useState(false);
+  const [selectionCompleted, setSelectionCompleted] = useState(false);
+
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Please login to continue");
@@ -57,7 +70,7 @@ export default function DriveForm() {
       const response = await api.get("/canadmin/get-drive/");
 
       if (response.data.success) {
-        const drive = response.data.data.find(d => d.id === parseInt(id));
+        const drive = response.data.data.find((d) => d.id === parseInt(id));
         if (drive) {
           setCurrentStatus(drive.status || "draft");
           setFormData({
@@ -67,8 +80,21 @@ export default function DriveForm() {
             ctc: drive.ctc || "",
             job_location: drive.job_location || "",
             institute: drive.institute || "",
-            drive_date_time: drive.drive_date_time ? drive.drive_date_time.slice(0, 16) : "",
+            drive_date_time: drive.drive_date_time
+              ? drive.drive_date_time.slice(0, 16)
+              : "",
           });
+
+          // Preload assigned candidates
+          const assigned = (drive.assigned_candidates || [])
+            .filter((a) => a.is_active)
+            .map((a) => ({
+              id: a.candidate,
+              name: a.candidate_name,
+              email: a.candidate_email,
+            }));
+          setSelectedCandidates(assigned);
+          setSelectionCompleted(assigned.length > 0);
         } else {
           toast.error("Drive not found");
           navigate("/admin/drive");
@@ -89,7 +115,13 @@ export default function DriveForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Reset candidate selection when institute changes
+    if (name === "institute") {
+      setSelectedCandidates([]);
+      setSelectionCompleted(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -105,23 +137,31 @@ export default function DriveForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check if drive is completed or cancelled
+
     if (["completed", "cancelled"].includes(currentStatus)) {
       toast.error(`Cannot modify a ${currentStatus} drive.`);
       return;
     }
 
+    if (selectedCandidates.length === 0) {
+      toast.error("Please select at least one candidate.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const submitData = { ...formData };
+      const submitData = {
+        ...formData,
+        candidate_ids: selectedCandidates.map((c) => c.id),
+      };
       if (isEditMode) submitData.id = parseInt(id);
 
-      // The interceptor will automatically add the token
       const response = await api.post("/canadmin/add-update-drive/", submitData);
 
       if (response.data.success) {
-        toast.success(isEditMode ? "Drive updated successfully!" : "Drive added successfully!");
+        toast.success(
+          isEditMode ? "Drive updated successfully!" : "Drive added successfully!"
+        );
         navigate("/admin/drive");
       } else {
         toast.error(response.data.message || "Failed to save");
@@ -144,6 +184,12 @@ export default function DriveForm() {
     navigate("/admin/drive");
   };
 
+  const handleRemoveCandidate = (candidateId) => {
+    const next = selectedCandidates.filter((c) => c.id !== candidateId);
+    setSelectedCandidates(next);
+    if (next.length === 0) setSelectionCompleted(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -162,6 +208,7 @@ export default function DriveForm() {
         <button
           onClick={handleCancel}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          type="button"
         >
           <FaArrowLeft className="text-gray-500" />
         </button>
@@ -170,13 +217,17 @@ export default function DriveForm() {
             {isEditMode ? "Edit Drive" : "Add Drive"}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {isEditMode ? "Update drive details" : "Register a new placement drive"}
+            {isEditMode
+              ? "Update drive details"
+              : "Register a new placement drive"}
           </p>
         </div>
         {isEditMode && currentStatus && (
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-gray-500">Status:</span>
-            <span className={`px-3 py-1 text-xs font-medium rounded-full ${statusConfig.color}`}>
+            <span
+              className={`px-3 py-1 text-xs font-medium rounded-full ${statusConfig.color}`}
+            >
               {statusConfig.label}
             </span>
           </div>
@@ -189,15 +240,26 @@ export default function DriveForm() {
           <FaInfoCircle className="text-blue-500 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm text-blue-700">
-              <strong>Status Automation:</strong> Drive status is automatically managed.
+              <strong>Status Automation:</strong> Drive status is automatically
+              managed.
             </p>
             <ul className="text-xs text-blue-600 mt-1 space-y-0.5">
-              <li>• New drives start as <strong>Draft</strong></li>
+              <li>
+                • New drives start as <strong>Draft</strong>
+              </li>
               <li>• Auto-publishes when drive date/time arrives</li>
-              <li>• Auto-updates to <strong>In Progress</strong> when first round becomes active</li>
-              <li>• Auto-updates to <strong>Completed</strong> when all rounds are completed</li>
+              <li>
+                • Auto-updates to <strong>In Progress</strong> when first round
+                becomes active
+              </li>
+              <li>
+                • Auto-updates to <strong>Completed</strong> when all rounds are
+                completed
+              </li>
               {isFinalStatus && (
-                <li className="text-red-600">This drive is {currentStatus}. No further changes allowed.</li>
+                <li className="text-red-600">
+                  This drive is {currentStatus}. No further changes allowed.
+                </li>
               )}
             </ul>
           </div>
@@ -218,7 +280,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
                 placeholder="Enter drive title"
               />
             </div>
@@ -233,7 +297,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
                 placeholder="Software Engineer"
               />
             </div>
@@ -248,7 +314,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
                 placeholder="10 LPA"
               />
             </div>
@@ -263,7 +331,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
                 placeholder="Mumbai"
               />
             </div>
@@ -278,7 +348,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
               >
                 <option value="">Select Institute</option>
                 {institutes.map((inst) => (
@@ -300,7 +372,9 @@ export default function DriveForm() {
                 onChange={handleChange}
                 required
                 disabled={isFinalStatus}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
               />
               <p className="mt-1 text-xs text-gray-500">
                 {Intl.DateTimeFormat().resolvedOptions().timeZone}
@@ -318,11 +392,54 @@ export default function DriveForm() {
                 required
                 disabled={isFinalStatus}
                 rows="4"
-                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none ${isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                className={`w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none ${
+                  isFinalStatus ? "bg-gray-100 cursor-not-allowed" : ""
+                }`}
                 placeholder="Enter drive description (e.g., job responsibilities, requirements, etc.)"
               />
             </div>
           </div>
+
+          {/* Selected Candidates Panel */}
+          {selectedCandidates.length > 0 && (
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-gray-700">
+                  Selected Candidates ({selectedCandidates.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowSelector(true)}
+                  disabled={isFinalStatus}
+                  className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+                >
+                  Modify selection
+                </button>
+              </div>
+              <div className="max-h-60 overflow-y-auto border rounded-lg divide-y">
+                {selectedCandidates.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900">{c.name}</div>
+                      <div className="text-xs text-gray-500">{c.email}</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCandidate(c.id)}
+                      disabled={isFinalStatus}
+                      className="text-red-500 hover:text-red-700 disabled:opacity-50"
+                      title="Remove"
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 border-t border-gray-200">
@@ -333,26 +450,63 @@ export default function DriveForm() {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || isFinalStatus}
-              className={`flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${isFinalStatus ? "cursor-not-allowed" : ""}`}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FaSave size={14} />
-                  {isEditMode ? "Update Drive" : "Add Drive"}
-                </>
-              )}
-            </button>
+
+            {!selectionCompleted ? (
+              <button
+                type="button"
+                disabled={!formData.institute || isFinalStatus}
+                onClick={() => setShowSelector(true)}
+                className={`flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 ${
+                  !formData.institute || isFinalStatus
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                title={
+                  !formData.institute
+                    ? "Select an institute first"
+                    : "Select candidates for this drive"
+                }
+              >
+                <FaUserPlus size={14} />
+                Select Candidates
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isSubmitting || isFinalStatus}
+                className={`flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  isFinalStatus ? "cursor-not-allowed" : ""
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <FaSave size={14} />
+                    {isEditMode ? "Update Drive" : "Add Drive"}
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </form>
       </div>
+
+      {/* Candidate Selector Modal */}
+      {showSelector && (
+        <CandidateSelector
+          instituteId={formData.institute}
+          selectedIds={selectedCandidates.map((c) => c.id)}
+          onChange={(selectedObjs) => {
+            setSelectedCandidates(selectedObjs);
+            setSelectionCompleted(selectedObjs.length > 0);
+          }}
+          onClose={() => setShowSelector(false)}
+        />
+      )}
     </div>
   );
 }

@@ -46,4 +46,9 @@ urlpatterns = [
 
     path('get-user-drive-attempts/<int:user_id>/', views.GetUserDriveAttempts, name='get_user_drive_attempts'),
     path("review-education/<int:education_id>/", views.ReviewEducation, name="review-education"),
+
+    path("get-institute-candidates/<int:institute_id>/", views.GetInstituteCandidates, name="get-institute-candidates"),
+    path("get-drive-assigned-candidates/<int:drive_id>/", views.GetDriveAssignedCandidates, name="get-drive-assigned-candidates"),
+    path("assign-candidates-to-drive/<int:drive_id>/", views.AssignCandidatesToDrive, name="assign-candidates-to-drive"),
+    path("unassign-candidate-from-drive/<int:drive_id>/<int:candidate_id>/", views.UnassignCandidateFromDrive, name="unassign-candidate-from-drive"),
 ]

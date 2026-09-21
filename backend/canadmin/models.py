@@ -260,3 +260,21 @@ class CodingSubmissionModel(models.Model):
     evaluated_at = models.DateTimeField(null=True, blank=True)
     def __str__(self):
         return f"Submission Result - Attempt {self.attempt.id}"
+
+class DriveCandidateModel(models.Model):
+    id = models.AutoField(primary_key=True)
+    drive = models.ForeignKey(DriveModel, on_delete=models.CASCADE, related_name="assigned_candidates")
+    candidate = models.ForeignKey("authentication.UserTable", on_delete=models.CASCADE, related_name="assigned_drives")
+    is_active = models.BooleanField(default=True)
+    assigned_by = models.ForeignKey("authentication.UserTable", on_delete=models.SET_NULL, null=True, blank=True, related_name="drives_assigned_by_admin")
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["drive", "candidate"],
+                name="unique_drive_candidate_assignment"
+            )
+        ]
+        ordering = ["assigned_at"]
+    def __str__(self):
+        return f"{self.drive.title} -> {self.candidate.email}"

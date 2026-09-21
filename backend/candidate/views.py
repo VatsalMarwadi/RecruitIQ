@@ -856,10 +856,12 @@ def GetAvailableDrives(request):
     AutoStatusService.update_all()
     
     drives = DriveModel.objects.filter(
-        institute=request.user.institute
+        institute=request.user.institute,
+        assigned_candidates__candidate=request.user,
+        assigned_candidates__is_active=True,
     ).exclude(
         status="draft"
-    ).select_related("institute").prefetch_related("rounds").order_by("-drive_date_time")
+    ).distinct().select_related("institute").prefetch_related("rounds").order_by("-drive_date_time")
     
     serializer = CandidateDriveSerializer(drives, many=True)
     return Response(
@@ -893,14 +895,25 @@ def GetCandidateDriveDetails(request, drive_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     try:
-        drive = (DriveModel.objects.select_related("institute").prefetch_related("rounds").exclude(status="draft").get(id=drive_id, institute=request.user.institute))
+        drive = (
+            DriveModel.objects
+            .select_related("institute")
+            .prefetch_related("rounds")
+            .exclude(status="draft")
+            .get(
+                id=drive_id,
+                institute=request.user.institute,
+                assigned_candidates__candidate=request.user,
+                assigned_candidates__is_active=True,
+            )
+        )
     except DriveModel.DoesNotExist:
         return Response(
             {
                 "success": False,
-                "message": "Drive Does Not Found!!!"
+                "message": "Drive not found or you are not assigned to it."
             },
-            status= status.HTTP_404_NOT_FOUND
+            status=status.HTTP_404_NOT_FOUND
         )
     
     # Get serialized drive data
@@ -2265,6 +2278,7 @@ def RunCodingCode(request):
     language = serializer.validated_data["language"]
     code = serializer.validated_data["code"]
 
+    # Check candidate owns the attempt
     if attempt.candidate != request.user:
 
         return Response(
@@ -2275,6 +2289,7 @@ def RunCodingCode(request):
             status=status.HTTP_403_FORBIDDEN
         )
 
+    # Check coding round
     if attempt.round.round_type != "coding":
 
         return Response(
@@ -2285,6 +2300,7 @@ def RunCodingCode(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Check attempt is still active
     attempt_error = validate_attempt_active(
         attempt
     )
@@ -2292,6 +2308,7 @@ def RunCodingCode(request):
     if attempt_error:
         return attempt_error
 
+    # Check question belongs to this round
     if question.round_id != attempt.round_id:
 
         return Response(
@@ -2305,10 +2322,11 @@ def RunCodingCode(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Get sample test cases
     sample_test_cases = CodingTestCaseModel.objects.filter(
         question=question,
         is_sample=True
-    )
+    ).order_by("id")
 
     if not sample_test_cases.exists():
 
@@ -2322,17 +2340,26 @@ def RunCodingCode(request):
 
     results = []
 
-    for test_case in sample_test_cases:
+    for index, test_case in enumerate(sample_test_cases, start=1):
 
+        # Execute code
         execution = execute_code(
             language=language,
             code=code,
             stdin=test_case.input_data
         )
 
-        stdout = execution.get("stdout", "")
-        stderr = execution.get("stderr", "")
+        stdout = execution.get(
+            "stdout",
+            ""
+        )
 
+        stderr = execution.get(
+            "stderr",
+            ""
+        )
+
+        # Compare actual output with expected output
         passed = (
             stdout.strip()
             == test_case.expected_output.strip()
@@ -2340,11 +2367,14 @@ def RunCodingCode(request):
 
         results.append(
             {
+                "test_case": index,
+
                 "test_case_id": test_case.id,
+
+                "passed": passed,
 
                 "input": test_case.input_data,
 
-                # Sample expected output can be shown
                 "expected_output": (
                     test_case.expected_output
                 ),
@@ -2352,8 +2382,6 @@ def RunCodingCode(request):
                 "your_output": stdout,
 
                 "stderr": stderr,
-
-                "passed": passed,
 
                 "execution_status": (
                     execution.get(
@@ -2364,16 +2392,40 @@ def RunCodingCode(request):
             }
         )
 
+    # Calculate summary
+    total_test_cases = len(results)
+
+    passed_test_cases = sum(
+        1
+        for result in results
+        if result["passed"]
+    )
+
+    failed_test_cases = (
+        total_test_cases
+        - passed_test_cases
+    )
+
     return Response(
         {
             "success": True,
+
             "message": "Code executed successfully.",
 
             "data": {
+
                 "question_id": question.id,
 
                 "language": language,
 
+                # Summary for bottom display
+                "total_test_cases": total_test_cases,
+
+                "passed_test_cases": passed_test_cases,
+
+                "failed_test_cases": failed_test_cases,
+
+                # Detailed result of every test case
                 "results": results,
 
                 "remaining_seconds": (

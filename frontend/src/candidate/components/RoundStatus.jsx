@@ -1,19 +1,44 @@
+// pages/coding/RoundStatus.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-
-import {
-  FaCheckCircle,
-  FaTimesCircle,
-  FaClock,
-  FaHourglassHalf,
-  FaSpinner,
-  FaCode,
-} from "react-icons/fa";
-
 import api from "../../configuration/api";
 
-export default function RoundStatus({ driveId, rounds }) {
+// ================================================================
+// BADGE STYLES — minimal
+// ================================================================
+
+const STATUS_STYLES = {
+  active: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  pending: "bg-amber-50 text-amber-700 border-amber-100",
+  completed: "bg-gray-100 text-gray-600 border-gray-200",
+  cancelled: "bg-red-50 text-red-700 border-red-100",
+};
+
+const FINAL_STYLES = {
+  Passed: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  Failed: "bg-red-50 text-red-700 border-red-100",
+  Evaluated: "bg-blue-50 text-blue-700 border-blue-100",
+  "In Progress": "bg-blue-50 text-blue-700 border-blue-100",
+  "Awaiting Evaluation": "bg-amber-50 text-amber-700 border-amber-100",
+  "Submitted - Awaiting Evaluation":
+    "bg-orange-50 text-orange-700 border-orange-100",
+  "Not Started": "bg-gray-100 text-gray-500 border-gray-200",
+};
+
+const Badge = ({ children, className = "" }) => (
+  <span
+    className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md border ${className}`}
+  >
+    {children}
+  </span>
+);
+
+// ================================================================
+// MAIN COMPONENT
+// ================================================================
+
+export default function RoundStatus({ driveId }) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -26,16 +51,11 @@ export default function RoundStatus({ driveId, rounds }) {
   const fetchRoundStatus = async () => {
     try {
       setLoading(true);
-
       const token = localStorage.getItem("token");
 
       const response = await api.get(
         `/candidate/get-candidate-round-status/${driveId}/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
@@ -50,375 +70,147 @@ export default function RoundStatus({ driveId, rounds }) {
   };
 
   const handleStartRound = (roundId, roundType) => {
-    if (roundType === "coding") {
-      navigate(`/candidate/coding/${roundId}/instructions`);
-    } else if (roundType === "aptitude") {
-      navigate(`/candidate/aptitude/${roundId}/instructions`);
-    }
+    navigate(`/candidate/${roundType}/${roundId}/instructions`);
   };
 
   // ================================================================
-  // ROUND STATUS BADGE
-  // ================================================================
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "active":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
-            <FaCheckCircle className="w-3 h-3" />
-            Active
-          </span>
-        );
-
-      case "pending":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200 flex items-center gap-1">
-            <FaClock className="w-3 h-3" />
-            Pending
-          </span>
-        );
-
-      case "completed":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border border-gray-200 flex items-center gap-1">
-            <FaCheckCircle className="w-3 h-3" />
-            Completed
-          </span>
-        );
-
-      case "cancelled":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 border border-red-200 flex items-center gap-1">
-            <FaTimesCircle className="w-3 h-3" />
-            Cancelled
-          </span>
-        );
-
-      default:
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-            {status || "Unknown"}
-          </span>
-        );
-    }
-  };
-
-  // ================================================================
-  // FINAL RESULT BADGE
-  // ================================================================
-
-  const getFinalStatusBadge = (finalStatus, roundType) => {
-    switch (finalStatus) {
-      // Passed
-      case "Passed":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-200 flex items-center gap-1">
-            <FaCheckCircle className="w-3 h-3" />
-            Passed
-          </span>
-        );
-
-      // Failed
-      case "Failed":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700 border border-red-200 flex items-center gap-1">
-            <FaTimesCircle className="w-3 h-3" />
-            Failed
-          </span>
-        );
-
-      // Coding Evaluated
-      case "Evaluated":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
-            <FaCheckCircle className="w-3 h-3" />
-            Evaluated
-          </span>
-        );
-
-      // In Progress
-      case "In Progress":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1">
-            <FaSpinner className="w-3 h-3 animate-spin" />
-            In Progress
-          </span>
-        );
-
-      // Awaiting Evaluation
-      case "Awaiting Evaluation":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200 flex items-center gap-1">
-            <FaHourglassHalf className="w-3 h-3" />
-            Awaiting Evaluation
-          </span>
-        );
-
-      // Submitted - Awaiting Evaluation
-      case "Submitted - Awaiting Evaluation":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700 border border-orange-200 flex items-center gap-1">
-            {roundType === "coding" ? (
-              <FaCode className="w-3 h-3" />
-            ) : (
-              <FaClock className="w-3 h-3" />
-            )}
-            Submitted - Awaiting Evaluation
-          </span>
-        );
-
-      // Not Started
-      case "Not Started":
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-            Not Started
-          </span>
-        );
-
-      default:
-        return (
-          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500 border border-gray-200">
-            {finalStatus || "Pending"}
-          </span>
-        );
-    }
-  };
-
-  // ================================================================
-  // LOADING STATE
+  // LOADING
   // ================================================================
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent"></div>
+      <div className="flex justify-center py-10">
+        <span className="w-6 h-6 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   // ================================================================
-  // UI RENDER
+  // RENDER
   // ================================================================
 
   return (
-    <div className="space-y-4">
-      {roundStatuses && roundStatuses.length > 0 ? (
-        roundStatuses.map((round) => (
-          <div
-            key={round.round_id}
-            className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-3">
+      {roundStatuses?.length > 0 ? (
+        roundStatuses.map((round) => {
+          const canStart =
+            round.can_access &&
+            round.round_status === "active" &&
+            !round.attempt_status;
+          const canResume =
+            round.can_access &&
+            round.attempt_status === "in_progress" &&
+            round.round_status === "active" &&
+            !round.is_locked;
 
-              {/* Left Side */}
-              <div className="flex-1">
-
-                {/* Round Header */}
-                <div className="flex flex-wrap items-center gap-2">
-
-                  <span className="font-semibold text-gray-900">
-                    Round {round.round_order}:{" "}
-                    {round.round_type_display}
-                  </span>
-
-                  <span className="text-gray-300">|</span>
-
-                  {getStatusBadge(round.round_status)}
-
-                  <span className="text-gray-300">|</span>
-
-                  {getFinalStatusBadge(
-                    round.final_status,
-                    round.round_type
-                  )}
-                </div>
-
-                {/* Lock Message */}
-                {round.is_locked && (
-                  <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                    <FaTimesCircle className="w-4 h-4" />
-                    {round.lock_reason}
-                  </p>
-                )}
-
-                {/* Attempt Information */}
-                {round.attempt_status && (
-                  <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
-
-                    <span className="flex items-center gap-1">
-                      <span className="font-medium">
-                        Attempt:
-                      </span>
-
-                      <span className="capitalize">
-                        {round.attempt_status.replace("_", " ")}
-                      </span>
-                    </span>
-
-                    {/* Score */}
-                    {round.score !== undefined &&
-                      round.score !== null && (
-                        <span className="flex items-center gap-1">
-                          <span className="font-medium">
-                            Score:
-                          </span>
-
-                          <span className="text-blue-600 font-medium">
-                            {round.score}
-                            {round.total_marks !== null &&
-                              round.total_marks !== undefined &&
-                              `/${round.total_marks}`}
-                          </span>
-                        </span>
-                      )}
-
-                    {/* Percentage */}
-                    {round.percentage !== undefined &&
-                      round.percentage !== null && (
-                        <span className="flex items-center gap-1">
-                          <span className="font-medium">
-                            Percentage:
-                          </span>
-
-                          <span
-                            className={`font-medium ${
-                              Number(round.percentage) >= 40
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }`}
-                          >
-                            {round.percentage}%
-                          </span>
-                        </span>
+          return (
+            <div
+              key={round.round_id}
+              className="bg-white rounded-xl border border-gray-100 p-4 hover:border-gray-200 transition-colors"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Left */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      Round {round.round_order} · {round.round_type_display}
+                    </h3>
+                    <Badge
+                      className={
+                        STATUS_STYLES[round.round_status] ||
+                        STATUS_STYLES.completed
+                      }
+                    >
+                      {round.round_status}
+                    </Badge>
+                    {round.final_status &&
+                      round.final_status !== "Not Started" && (
+                        <Badge
+                          className={
+                            FINAL_STYLES[round.final_status] ||
+                            FINAL_STYLES["Not Started"]
+                          }
+                        >
+                          {round.final_status}
+                        </Badge>
                       )}
                   </div>
-                )}
 
-                {/* ====================================================
-                    CODING SUBMISSION DETAILS
-                ==================================================== */}
-
-                {round.round_type === "coding" &&
-                  round.coding_submission && (
-                    <div className="text-sm mt-2">
-
-                      <span className="font-medium text-gray-500">
-                        Submission:
-                      </span>{" "}
-
-                      {round.coding_submission.status ===
-                      "evaluated" ? (
-                        <span className="text-blue-600 font-medium">
-                          Evaluated
-                        </span>
-                      ) : round.coding_submission.status ===
-                        "submitted" ? (
-                        <span className="text-orange-600 font-medium">
-                          Submitted - Awaiting Evaluation
-                        </span>
-                      ) : (
-                        <span className="text-gray-600 font-medium">
-                          {round.coding_submission.status}
-                        </span>
-                      )}
-
-                      {/* Evaluated Date */}
-                      {round.coding_submission.evaluated_at && (
-                        <span className="ml-2 text-xs text-gray-400">
-                          Evaluated:{" "}
-                          {new Date(
-                            round.coding_submission.evaluated_at
-                          ).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  )}
-              </div>
-
-              {/* Right Side */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-
-                {/* Start Button */}
-                {round.can_access &&
-                  round.round_status === "active" &&
-                  !round.attempt_status && (
-                    <button
-                      onClick={() =>
-                        handleStartRound(
-                          round.round_id,
-                          round.round_type
-                        )
-                      }
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap font-medium"
-                    >
-                      Start {round.round_type_display}
-                    </button>
+                  {/* Lock reason */}
+                  {round.is_locked && round.lock_reason && (
+                    <p className="text-xs text-red-600 mt-1.5">
+                      {round.lock_reason}
+                    </p>
                   )}
 
-                {/* In Progress / Resume */}
-                {round.can_access &&
-                  round.attempt_status === "in_progress" &&
-                  round.round_status === "active" && (
+                  {/* Attempt info */}
+                  {round.attempt_status && (
+                    <p className="text-xs text-gray-500 mt-1.5 capitalize">
+                      Attempt · {round.attempt_status.replace("_", " ")}
+                    </p>
+                  )}
+
+                  {/* Coding submission */}
+                  {round.round_type === "coding" &&
+                    round.coding_submission && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Submission ·{" "}
+                        <span
+                          className={
+                            round.coding_submission.status === "evaluated"
+                              ? "text-blue-600"
+                              : round.coding_submission.status === "submitted"
+                                ? "text-orange-600"
+                                : "text-gray-600"
+                          }
+                        >
+                          {round.coding_submission.status === "evaluated"
+                            ? "Evaluated"
+                            : round.coding_submission.status === "submitted"
+                              ? "Awaiting Evaluation"
+                              : round.coding_submission.status}
+                        </span>
+                      </p>
+                    )}
+                </div>
+
+                {/* Right */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {canResume && (
                     <button
                       onClick={() =>
-                        handleStartRound(
-                          round.round_id,
-                          round.round_type
-                        )
+                        handleStartRound(round.round_id, round.round_type)
                       }
-                      className="px-4 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors whitespace-nowrap font-medium"
+                      className="px-3.5 py-1.5 text-xs font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                     >
                       Resume
                     </button>
                   )}
 
-                {/* Completed */}
-                {round.attempt_status === "completed" &&
-                  round.final_status !== "Evaluated" &&
-                  !round.is_locked && (
-                    <span className="px-4 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg whitespace-nowrap">
-                      Completed
-                    </span>
+                  {canStart && (
+                    <button
+                      onClick={() =>
+                        handleStartRound(round.round_id, round.round_type)
+                      }
+                      className="px-3.5 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                      Start
+                    </button>
                   )}
 
-                {/* Evaluated */}
-                {round.final_status === "Evaluated" && (
-                  <span className="px-4 py-2 bg-blue-50 text-blue-600 text-sm rounded-lg whitespace-nowrap font-medium">
-                    Evaluated
-                  </span>
-                )}
-
-                {/* Passed */}
-                {round.final_status === "Passed" && (
-                  <span className="px-4 py-2 bg-green-50 text-green-600 text-sm rounded-lg whitespace-nowrap font-medium">
-                    Passed
-                  </span>
-                )}
-
-                {/* Failed */}
-                {round.final_status === "Failed" && (
-                  <span className="px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg whitespace-nowrap font-medium">
-                    Failed
-                  </span>
-                )}
-
-                {/* Locked */}
-                {round.is_locked && (
-                  <span className="px-4 py-2 bg-gray-100 text-gray-400 text-sm rounded-lg cursor-not-allowed whitespace-nowrap flex items-center gap-1">
-                    <FaTimesCircle className="w-4 h-4" />
-                    Locked
-                  </span>
-                )}
+                  {round.is_locked && !canStart && !canResume && (
+                    <span className="px-3.5 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded-lg border border-gray-100">
+                      Locked
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          );
+        })
       ) : (
-        <div className="text-center py-8 text-gray-500 bg-white rounded-xl border border-gray-200">
-          <p className="text-sm">
-            No rounds available
-          </p>
+        <div className="text-center py-10 text-sm text-gray-400 bg-white rounded-xl border border-gray-100">
+          No rounds available
         </div>
       )}
     </div>

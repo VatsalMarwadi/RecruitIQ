@@ -37,49 +37,108 @@ const getRoundStatus = (round, now) => {
 };
 
 // ================================================================
-// GET RESULT INFORMATION
+// HELPER: HAS THE ROUND BEEN FINAL-SUBMITTED?
 // ================================================================
 
-const getResultInfo = (round) => {
-  // Admin decision exists
-  if (round.decision_exists) {
-    if (round.final_status === "Passed") {
-      return { label: "Passed", color: "green" };
+const isRoundSubmitted = (round) => {
+  // Coding round — check the coding_submission object
+  if (round.round_type === "coding" && round.coding_submission) {
+    const s = round.coding_submission.status;
+    // "submitted" or "evaluated" both mean the round is done
+    if (s === "submitted" || s === "evaluated") {
+      return true;
     }
-    if (round.final_status === "Failed") {
-      return { label: "Failed", color: "red" };
-    }
-    return { label: "Pending", color: "yellow" };
   }
 
-  // Coding round
+  // Generic fallbacks (works for aptitude too)
+  if (round.final_status === "Submitted - Awaiting Evaluation") return true;
+  if (round.final_status === "Awaiting Evaluation") return true;
+  if (round.final_status === "Evaluated") return true;
+  if (round.final_status === "Passed") return true;
+  if (round.final_status === "Failed") return true;
+
+  // attempt_status of completed/passed/failed also means done
+  if (round.attempt_status === "completed") return true;
+  if (round.attempt_status === "passed") return true;
+  if (round.attempt_status === "failed") return true;
+
+  return false;
+};
+
+// ================================================================
+// GET SINGLE RESULT MESSAGE
+// Priority-based: returns ONE message (or null)
+// ================================================================
+
+const getRoundMessage = (round, status) => {
+  // 1. Locked — highest priority
+  if (round.is_locked) {
+    return { text: round.lock_reason || "Round is locked", color: "red" };
+  }
+
+  // 2. Admin decision (Passed / Failed / Pending)
+  if (round.decision_exists) {
+    if (round.final_status === "Passed") {
+      return { text: "Passed", color: "green" };
+    }
+    if (round.final_status === "Failed") {
+      return { text: "Failed", color: "red" };
+    }
+    return { text: "Result: Pending", color: "yellow" };
+  }
+
+  // 3. Coding submission status
   if (round.round_type === "coding" && round.coding_submission) {
     const submissionStatus = round.coding_submission.status;
     if (submissionStatus === "evaluated") {
-      return { label: "Evaluated", color: "blue" };
+      return { text: "Evaluated", color: "blue" };
     }
     if (submissionStatus === "submitted") {
-      return { label: "Submitted - Awaiting Evaluation", color: "orange" };
+      return { text: "Submitted — Awaiting Evaluation", color: "orange" };
     }
   }
 
-  // In Progress
+  // 4. Final status fallbacks
   if (round.final_status === "In Progress") {
-    return { label: "In Progress", color: "yellow" };
+    return { text: "In Progress", color: "yellow" };
   }
-
-  // Awaiting Evaluation
   if (round.final_status === "Awaiting Evaluation") {
-    return { label: "Awaiting Evaluation", color: "yellow" };
+    return { text: "Awaiting Evaluation", color: "yellow" };
   }
-
-  // Not Started
+  if (round.final_status === "Submitted - Awaiting Evaluation") {
+    return { text: "Submitted — Awaiting Evaluation", color: "orange" };
+  }
   if (round.final_status === "Not Started") {
-    return { label: "Not Started", color: "gray" };
+    return { text: "Not Started", color: "gray" };
   }
 
-  // Default
-  return { label: round.final_status || "Pending", color: "gray" };
+  // 5. Pending round with scheduled start
+  if (
+    !round.attempt_status &&
+    status === "pending" &&
+    round.round_start_datetime
+  ) {
+    return {
+      text: `Starts at ${new Date(round.round_start_datetime).toLocaleString()}`,
+      color: "gray",
+    };
+  }
+
+  // 6. Nothing important to show
+  return null;
+};
+
+// ================================================================
+// MESSAGE COLOR MAP
+// ================================================================
+
+const MESSAGE_COLORS = {
+  green: "bg-green-50 text-green-700 border-green-200",
+  red: "bg-red-50 text-red-700 border-red-200",
+  yellow: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  blue: "bg-blue-50 text-blue-700 border-blue-200",
+  orange: "bg-orange-50 text-orange-700 border-orange-200",
+  gray: "bg-gray-50 text-gray-600 border-gray-200",
 };
 
 // ================================================================
@@ -230,16 +289,6 @@ export const DriveDetails = () => {
               .sort((a, b) => a.round_order - b.round_order)
               .map((round) => {
                 const status = round.displayStatus || round.status;
-                const isTest =
-                  round.round_type === "aptitude" ||
-                  round.round_type === "coding";
-                const resultInfo = getResultInfo(round);
-                const isInProgress = round.final_status === "In Progress";
-                const isPassed = round.final_status === "Passed";
-                const isFailed = round.final_status === "Failed";
-                const isEvaluated = round.final_status === "Evaluated";
-                const isSubmitted =
-                  round.final_status === "Submitted - Awaiting Evaluation";
 
                 // Get duration values
                 const roundDuration =
@@ -247,6 +296,56 @@ export const DriveDetails = () => {
                   round.duration_minutes ||
                   "N/A";
                 const testDuration = round.test_duration_minutes || "N/A";
+
+                // Has the round been final-submitted?
+                const submitted = isRoundSubmitted(round);
+
+                // -------- Determine SINGLE button --------
+                let button = null;
+
+                // ❌ Locked — no button
+                if (round.is_locked) {
+                  button = null;
+                }
+                // ❌ Round already submitted — disable (no Resume, no Start)
+                else if (submitted) {
+                  button = null;
+                }
+                // ✅ Resume — only if:
+                //    - candidate has access
+                //    - attempt is in progress
+                //    - round is active
+                //    - round NOT yet submitted
+                //    - it's a coding round (per your requirement) OR aptitude
+                else if (
+                  round.can_access &&
+                  round.attempt_status === "in_progress" &&
+                  status === "active" &&
+                  !submitted &&
+                  (round.round_type === "coding" ||
+                    round.round_type === "aptitude")
+                ) {
+                  button = {
+                    label: "Resume Test",
+                    className: "bg-yellow-600 hover:bg-yellow-700 text-white",
+                    action: "resume",
+                  };
+                }
+                // ✅ Start — accessible, active, never attempted
+                else if (
+                  round.can_access &&
+                  status === "active" &&
+                  !round.attempt_status
+                ) {
+                  button = {
+                    label: `Start ${round.round_type_display || "Round"}`,
+                    className: "bg-blue-600 hover:bg-blue-700 text-white",
+                    action: "start",
+                  };
+                }
+
+                // -------- Determine SINGLE message --------
+                const message = getRoundMessage(round, status);
 
                 return (
                   <div
@@ -280,7 +379,7 @@ export const DriveDetails = () => {
                         </div>
                       </div>
 
-                      {/* Round Status */}
+                      {/* Round Status Badge */}
                       <span
                         className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
                           status === "active"
@@ -296,163 +395,40 @@ export const DriveDetails = () => {
                       </span>
                     </div>
 
-                    {/* Result Section */}
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      {isTest && (
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {/* Result Badge */}
-                          {round.attempt_score !== null &&
-                            round.attempt_score !== undefined && (
-                              <span
-                                className={`px-3 py-1 text-xs rounded-lg ${
-                                  resultInfo.color === "green"
-                                    ? "bg-green-50 text-green-700"
-                                    : resultInfo.color === "red"
-                                      ? "bg-red-50 text-red-700"
-                                      : resultInfo.color === "blue"
-                                        ? "bg-blue-50 text-blue-700"
-                                        : resultInfo.color === "orange"
-                                          ? "bg-orange-50 text-orange-700"
-                                          : "bg-gray-50 text-gray-600"
-                                }`}
-                              >
-                                {resultInfo.label}
-                              </span>
-                            )}
-
-                          {/* Status Without Score */}
-                          {(round.attempt_score === null ||
-                            round.attempt_score === undefined) && (
-                            <span
-                              className={`px-3 py-1 text-xs rounded-lg ${
-                                resultInfo.color === "green"
-                                  ? "bg-green-50 text-green-700"
-                                  : resultInfo.color === "red"
-                                    ? "bg-red-50 text-red-700"
-                                    : resultInfo.color === "blue"
-                                      ? "bg-blue-50 text-blue-700"
-                                      : resultInfo.color === "orange"
-                                        ? "bg-orange-50 text-orange-700"
-                                        : resultInfo.color === "yellow"
-                                          ? "bg-yellow-50 text-yellow-700"
-                                          : "bg-gray-50 text-gray-600"
-                              }`}
-                            >
-                              {resultInfo.label}
-                            </span>
-                          )}
-
-                          {/* Score */}
-                          {round.attempt_score !== null &&
-                            round.attempt_score !== undefined && (
-                              <span className="text-xs text-gray-500">
-                                Score: {round.attempt_score} /{" "}
-                                {round.attempt_total_marks ?? 0}
-                                {round.attempt_percentage !== null &&
-                                  round.attempt_percentage !== undefined && (
-                                    <> ({round.attempt_percentage}%)</>
-                                  )}
-                              </span>
-                            )}
-                        </div>
-                      )}
-
-                      {/* Coding Submission Information */}
-                      {round.round_type === "coding" &&
-                        round.coding_submission && (
-                          <div className="mt-2 text-xs text-gray-500">
-                            <span className="font-medium">Submission:</span>{" "}
-                            {round.coding_submission.status === "evaluated" ? (
-                              <span className="text-blue-600 font-medium">
-                                Evaluated
-                              </span>
-                            ) : round.coding_submission.status ===
-                              "submitted" ? (
-                              <span className="text-orange-600 font-medium">
-                                Submitted - Awaiting Evaluation
-                              </span>
-                            ) : (
-                              <span className="text-gray-600 font-medium">
-                                {round.coding_submission.status}
-                              </span>
-                            )}
-                            {round.coding_submission.evaluated_at && (
-                              <span className="ml-2 text-gray-400">
-                                Evaluated:{" "}
-                                {new Date(
-                                  round.coding_submission.evaluated_at,
-                                ).toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                      {/* Aptitude / Other Round Status */}
-                      {round.round_type === "aptitude" &&
-                        round.decision_exists && (
-                          <div className="mt-2 text-xs text-gray-500">
-                            Result decided by admin:
-                            <span
-                              className={`ml-1 font-medium ${
-                                isPassed
-                                  ? "text-green-600"
-                                  : isFailed
-                                    ? "text-red-600"
-                                    : "text-yellow-600"
-                              }`}
-                            >
-                              {round.final_status}
-                            </span>
-                          </div>
-                        )}
-
-                      {/* Lock Message */}
-                      {round.is_locked && (
-                        <div className="mt-2 text-xs text-red-600">
-                          {round.lock_reason}
-                        </div>
-                      )}
-
-                      {/* Start / Resume Button */}
-                      {round.can_access &&
-                        round.display_status === "active" &&
-                        !round.attempt_status && (
-                          <button
-                            onClick={() =>
-                              handleAction(round.id, round.round_type, "start")
-                            }
-                            className="mt-3 px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    {/* Footer: single message + single button */}
+                    {(message || button) && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                        {/* Single message */}
+                        {message ? (
+                          <span
+                            className={`px-2.5 py-1 text-xs font-medium rounded-md border ${
+                              MESSAGE_COLORS[message.color] ||
+                              MESSAGE_COLORS.gray
+                            }`}
                           >
-                            Start {round.round_type_display}
-                          </button>
-                        )}
-
-                      {/* Resume */}
-                      {round.can_access &&
-                        round.attempt_status === "in_progress" &&
-                        round.round_status === "active" && (
-                          <button
-                            onClick={() =>
-                              handleAction(round.id, round.round_type, "resume")
-                            }
-                            className="mt-3 px-4 py-2 bg-yellow-600 text-white text-xs font-medium rounded-lg hover:bg-yellow-700 transition-colors"
-                          >
-                            Resume Test
-                          </button>
-                        )}
-
-                      {/* Pending */}
-                      {!round.attempt_status &&
-                        status === "pending" &&
-                        round.round_start_datetime && (
-                          <span className="block mt-2 text-xs text-gray-500">
-                            Round starts at{" "}
-                            {new Date(
-                              round.round_start_datetime,
-                            ).toLocaleString()}
+                            {message.text}
                           </span>
+                        ) : (
+                          <span />
                         )}
-                    </div>
+
+                        {/* Single button */}
+                        {button && (
+                          <button
+                            onClick={() =>
+                              handleAction(
+                                round.id,
+                                round.round_type,
+                                button.action,
+                              )
+                            }
+                            className={`px-4 py-2 text-xs font-medium rounded-lg transition-colors ${button.className}`}
+                          >
+                            {button.label}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
