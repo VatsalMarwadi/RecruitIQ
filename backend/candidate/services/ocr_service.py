@@ -1,7 +1,6 @@
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-import os
 import re
 import logging
 from difflib import SequenceMatcher
@@ -36,10 +35,8 @@ STOPWORDS = {"of", "the", "and", "&", "for", "a", "an", "in", "at", "&amp;"}
 def _similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.strip().lower(), b.strip().lower()).ratio()
 
-
 def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip().lower()
-
 
 def _preprocess_for_ocr(image: Image.Image) -> Image.Image:
     image = image.convert("L")
@@ -49,7 +46,6 @@ def _preprocess_for_ocr(image: Image.Image) -> Image.Image:
     image = ImageOps.autocontrast(image)
     image = image.filter(ImageFilter.SHARPEN)
     return image
-
 
 def extract_text_from_image(image_file) -> str:
     try:
@@ -68,7 +64,6 @@ def extract_text_from_image(image_file) -> str:
         image_file.seek(0)
         return ""
 
-
 def name_found_in_text(candidate_name: str, ocr_text: str, threshold: float = 0.75) -> bool:
     normalized_name = _normalize(candidate_name)
     normalized_text = _normalize(ocr_text)
@@ -85,7 +80,6 @@ def name_found_in_text(candidate_name: str, ocr_text: str, threshold: float = 0.
             return True
     return False
 
-
 def degree_found_in_text(value: str, ocr_text: str) -> bool:
     if not value:
         return True
@@ -97,7 +91,6 @@ def degree_found_in_text(value: str, ocr_text: str) -> bool:
         if candidate in normalized_text:
             return True
     return field_found_in_text(value, ocr_text)
-
 
 def institute_found_in_text(value: str, ocr_text: str, word_threshold: float = 0.75, overlap_required: float = 0.5) -> bool:
     normalized_value = _normalize(value)
@@ -115,7 +108,6 @@ def institute_found_in_text(value: str, ocr_text: str, word_threshold: float = 0
             matched += 1
     return (matched / len(value_words)) >= overlap_required
 
-
 def document_contains_marks_data(ocr_text: str) -> bool:
     patterns = [
         r'\b\d{1,3}(\.\d+)?\s*%',
@@ -128,7 +120,6 @@ def document_contains_marks_data(ocr_text: str) -> bool:
     ]
     text = (ocr_text or "").lower()
     return any(re.search(p, text) for p in patterns)
-
 
 def field_found_in_text(value: str, ocr_text: str, threshold: float = 0.65) -> bool:
     if not value:
@@ -146,47 +137,34 @@ def field_found_in_text(value: str, ocr_text: str, threshold: float = 0.65) -> b
             return True
     return False
 
-
 def verify_education_document(candidate_name, education_data, image_file):
-    """
-    Returns (status: str, message: str | None)
-    status is one of: "verified", "pending_review", "rejected"
-    """
     ocr_text = extract_text_from_image(image_file)
-
     if ocr_text is None:
         return "rejected", (
             "Certificate verification is temporarily unavailable. "
             "Please try again later or contact support."
         )
-
     if not ocr_text.strip():
         return "rejected", "Could not read any text from the uploaded certificate. Please upload a clearer image."
-
     institute_ok = institute_found_in_text(education_data.get("institute", ""), ocr_text)
     degree_ok = degree_found_in_text(education_data.get("degree", ""), ocr_text)
     name_ok = name_found_in_text(candidate_name, ocr_text)
-
     marks = education_data.get("marks", "")
     marks_ok = True
     if marks and document_contains_marks_data(ocr_text):
         marks_ok = field_found_in_text(marks, ocr_text)
-
     if name_ok and institute_ok and degree_ok and marks_ok:
         return "verified", None
-
     if not institute_ok and not degree_ok:
         return "rejected", (
             "This certificate doesn't appear to match the institute or degree you entered. "
             "Please upload the correct certificate."
         )
-
     if not name_ok:
         return "pending_review", (
             "Your education details were saved, but the name on the certificate "
             "could not be automatically verified. An admin will review it shortly."
         )
-
     mismatches = []
     if not institute_ok:
         mismatches.append("institute")
@@ -194,7 +172,6 @@ def verify_education_document(candidate_name, education_data, image_file):
         mismatches.append("degree")
     if not marks_ok:
         mismatches.append("marks")
-
     return "rejected", (
         f"The following details don't match your certificate: {', '.join(mismatches)}. "
         "Please check and re-enter them."

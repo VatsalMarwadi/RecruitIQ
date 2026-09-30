@@ -1,25 +1,12 @@
-// admin/pages/aptitude/AptitudeResultManagement.jsx
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../../configuration/api";
-import {
-  FaArrowLeft,
-  FaEye,
-  FaSpinner,
-  FaUserCircle,
-  FaEdit,
-  FaSave,
-  FaUndo,
-  FaChartBar,
-  FaClock,
-} from "react-icons/fa";
+import { FaArrowLeft, FaEye, FaSpinner, FaUserCircle, FaEdit, FaSave, FaUndo, FaChartBar, FaClock } from "react-icons/fa";
 
 export default function AptitudeResultManagement() {
   const navigate = useNavigate();
   const { roundId } = useParams();
-
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -39,25 +26,21 @@ export default function AptitudeResultManagement() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-
       const roundResponse = await api.get(
         `/canadmin/get-round-details/${roundId}/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-
       if (roundResponse.data.success) {
         setRoundData(roundResponse.data.data);
       }
-
       const resultResponse = await api.get(
         `/canadmin/list-aptitude-results/${roundId}/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-
       if (resultResponse.data.success) {
         setResults(resultResponse.data.data.results || []);
       }
@@ -74,7 +57,6 @@ export default function AptitudeResultManagement() {
       toast.error("Passing percentage must be between 0 and 100");
       return;
     }
-
     setProcessing(true);
     try {
       const token = localStorage.getItem("token");
@@ -83,12 +65,10 @@ export default function AptitudeResultManagement() {
         { passing_percentage: passingPercentage },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
       if (response.data.success) {
         setPreviewData(response.data.data);
         setIsPreviewMode(true);
         setShowPreview(true);
-
         const initialModifications = {};
         response.data.data.results.forEach((result) => {
           if (result.suggested_result !== "pending") {
@@ -124,7 +104,6 @@ export default function AptitudeResultManagement() {
         const id = result.attempt_id || result.submission_id;
         const idKey = result.attempt_id ? "attempt_id" : "submission_id";
         const finalResult = modifiedResults[id] || result.suggested_result;
-
         if (finalResult && finalResult !== "pending") {
           return {
             [idKey]: id,
@@ -148,7 +127,6 @@ export default function AptitudeResultManagement() {
         { results: payload },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-
       if (response.data.success) {
         toast.success(
           `Successfully marked ${response.data.data.updated_count} candidates`,
@@ -214,7 +192,6 @@ export default function AptitudeResultManagement() {
 
   return (
     <div className="w-full">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => navigate(`/admin/aptitude-round/${roundId}`)}
@@ -256,7 +233,6 @@ export default function AptitudeResultManagement() {
         )}
       </div>
 
-      {/* Configuration */}
       {!showPreview ? (
         <div className="bg-white rounded-lg border border-gray-200 p-6 max-w-2xl">
           <h2 className="text-sm font-medium text-gray-900 mb-4">

@@ -19,95 +19,50 @@ class DriveCandidateSerializer(serializers.ModelSerializer):
 
 class DriveSerializer(serializers.ModelSerializer):
     institute_details = InstituteSerializer(source="institute", read_only=True)
-    candidate_ids = serializers.ListField(
-        child=serializers.IntegerField(min_value=1),
-        write_only=True,
-        required=False,
-    )
+    candidate_ids = serializers.ListField(child=serializers.IntegerField(min_value=1), write_only=True, required=False,)
     assigned_candidates = serializers.SerializerMethodField()
-
     class Meta:
         model = DriveModel
-        fields = [
-            'id', 'title', 'job_role', 'description', 'ctc', 'job_location',
-            'institute', 'institute_details', 'status', 'drive_date_time',
-            'candidate_ids', 'assigned_candidates',
-            'created_at', 'updated_at',
-        ]
+        fields = ['id', 'title', 'job_role', 'description', 'ctc', 'job_location', 'institute', 'institute_details', 'status', 'drive_date_time', 'candidate_ids', 'assigned_candidates', 'created_at', 'updated_at',]
         read_only_fields = ['id', 'status', 'created_at', 'updated_at']
-
-    # ---------------- POP candidate_ids BEFORE SAVE ----------------
     def create(self, validated_data):
         validated_data.pop("candidate_ids", None)
         return super().create(validated_data)
-
     def update(self, instance, validated_data):
         validated_data.pop("candidate_ids", None)
         return super().update(instance, validated_data)
-
-    # ---------------- READ: assigned_candidates ----------------
     def get_assigned_candidates(self, obj):
         try:
-            assignments = obj.assigned_candidates.filter(
-                is_active=True
-            ).select_related("candidate")
+            assignments = obj.assigned_candidates.filter(is_active=True).select_related("candidate")
             return DriveCandidateSerializer(assignments, many=True).data
         except Exception as e:
             import logging
-            logging.getLogger(__name__).error(
-                f"assigned_candidates failed for drive {obj.id}: {e}"
-            )
+            logging.getLogger(__name__).error(f"assigned_candidates failed for drive {obj.id}: {e}")
             return []
-
-    # ---------------- VALIDATE: candidate_ids ----------------
     def validate_candidate_ids(self, value):
         if value is None:
             return value
-        institute_id = self.initial_data.get("institute") or (
-            self.instance.institute_id if self.instance else None
-        )
+        institute_id = self.initial_data.get("institute") or (self.instance.institute_id if self.instance else None)
         if not institute_id:
-            raise serializers.ValidationError(
-                "institute is required before assigning candidates."
-            )
-
-        # Try direct field first, fall back to profile__institute
+            raise serializers.ValidationError("institute is required before assigning candidates.")
         try:
-            valid_ids = set(
-                UserTable.objects.filter(
-                    id__in=value, role="candidate", institute_id=institute_id
-                ).values_list("id", flat=True)
-            )
+            valid_ids = set(UserTable.objects.filter(id__in=value, role="candidate", institute_id=institute_id).values_list("id", flat=True))
         except Exception:
-            valid_ids = set(
-                UserTable.objects.filter(
-                    id__in=value, role="candidate",
-                    profile__institute_id=institute_id
-                ).values_list("id", flat=True)
-            )
-
+            valid_ids = set(UserTable.objects.filter(id__in=value, role="candidate", profile__institute_id=institute_id).values_list("id", flat=True))
         invalid = set(value) - valid_ids
         if invalid:
-            raise serializers.ValidationError(
-                f"These candidate IDs don't belong to the selected institute: {sorted(invalid)}"
-            )
+            raise serializers.ValidationError(f"These candidate IDs don't belong to the selected institute: {sorted(invalid)}")
         return value
-
     def validate(self, data):
         if self.instance and 'status' in data:
             data.pop('status', None)
         return data
 
-# canadmin/serializers.py - Updated RoundSerializer
-
 class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoundModel
-        fields = ['id', 'drive', 'round_type', 'round_order', 'status', 
-                  'meeting_link', 'round_start_datetime', 'round_duration_minutes',
-                  'test_duration_minutes', 'is_test_started', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'status', 'is_test_started', 'created_at', 'updated_at']
-    
+        fields = ['id', 'drive', 'round_type', 'round_order', 'status', 'meeting_link', 'round_start_datetime', 'round_duration_minutes', 'test_duration_minutes', 'is_test_started', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'status', 'is_test_started', 'created_at', 'updated_at']    
     def validate(self, data):
         from django.utils import timezone
         round_type = data.get("round_type", self.instance.round_type if self.instance else None)
@@ -115,12 +70,8 @@ class RoundSerializer(serializers.ModelSerializer):
         round_start_datetime = data.get("round_start_datetime", self.instance.round_start_datetime if self.instance else None)
         round_duration_minutes = data.get("round_duration_minutes", self.instance.round_duration_minutes if self.instance else None)
         test_duration_minutes = data.get("test_duration_minutes", self.instance.test_duration_minutes if self.instance else None)
-        
-        # For editing, status cannot be changed through API
         if self.instance and 'status' in data:
             data.pop('status', None)
-        
-        # Validate meeting link for interview rounds
         interview_rounds = ["gd", "technical", "hr"]
         if round_type in interview_rounds and not meeting_link:
             raise serializers.ValidationError(
@@ -128,8 +79,6 @@ class RoundSerializer(serializers.ModelSerializer):
                     "meeting_link": "Meeting link is required for this round."
                 }
             )
-        
-        # Validate round_start_datetime is not in the past for new rounds
         if round_start_datetime and not self.instance:
             if round_start_datetime < timezone.now():
                 raise serializers.ValidationError(
@@ -137,24 +86,18 @@ class RoundSerializer(serializers.ModelSerializer):
                         "round_start_datetime": "Round start date and time cannot be in the past."
                     }
                 )
-        
-        # Validate round_duration_minutes
         if round_duration_minutes and round_duration_minutes <= 0:
             raise serializers.ValidationError(
                 {
                     "round_duration_minutes": "Round duration must be greater than 0."
                 }
             )
-        
-        # Validate test_duration_minutes
         if test_duration_minutes and test_duration_minutes <= 0:
             raise serializers.ValidationError(
                 {
                     "test_duration_minutes": "Test duration must be greater than 0."
                 }
             )
-        
-        # Validate test_duration_minutes <= round_duration_minutes
         if round_duration_minutes and test_duration_minutes:
             if test_duration_minutes > round_duration_minutes:
                 raise serializers.ValidationError(
@@ -162,34 +105,26 @@ class RoundSerializer(serializers.ModelSerializer):
                         "test_duration_minutes": "Test duration cannot be longer than round duration."
                     }
                 )
-        
         return data
-    
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data.get('round_start_datetime') is None:
             data['round_start_datetime'] = None
         return data
 
-# Updated DriveRoundSerializer
 class DriveRoundSerializer(serializers.ModelSerializer):
-    round_end_datetime = serializers.SerializerMethodField()
-    
+    round_end_datetime = serializers.SerializerMethodField()    
     class Meta:
         model = RoundModel
-        fields = ['id', 'round_type', 'round_order', 'status', 'meeting_link', 
-                  'round_start_datetime', 'round_duration_minutes', 'test_duration_minutes',
-                  'round_end_datetime', 'is_test_started', 'created_at', 'updated_at']
-    
+        fields = ['id', 'round_type', 'round_order', 'status', 'meeting_link', 'round_start_datetime', 'round_duration_minutes', 'test_duration_minutes', 'round_end_datetime', 'is_test_started', 'created_at', 'updated_at']
     def get_round_end_datetime(self, obj):
         return obj.get_round_end_datetime()
-    
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data.get('round_start_datetime') is None:
             data['round_start_datetime'] = None
         return data
-
+    
 class DriveDetailsSerializer(serializers.ModelSerializer):
     institute = InstituteSerializer(read_only=True)
     rounds = DriveRoundSerializer(many=True, read_only=True)
@@ -214,14 +149,10 @@ class UploadAptitudeQuestionSerializer(serializers.Serializer):
     def validate_file(self, value):
         allowed_extensions = [".xlsx"]
         if not any(value.name.lower().endswith(ext) for ext in allowed_extensions):
-            raise serializers.ValidationError(
-                "Only .xlsx Excel files are allowed."
-            )
+            raise serializers.ValidationError("Only .xlsx Excel files are allowed.")
         max_size = 5 * 1024 * 1024
         if value.size > max_size:
-            raise serializers.ValidationError(
-                "File size should not exceed 5 MB."
-            )
+            raise serializers.ValidationError("File size should not exceed 5 MB.")
         return value
 
 class CodingQuestionSerializer(serializers.ModelSerializer):
@@ -248,22 +179,10 @@ class AptitudeResultSerializer(serializers.ModelSerializer):
     candidate_name = serializers.CharField(source='candidate.name', read_only=True)
     candidate_decision = serializers.SerializerMethodField()
     percentage = serializers.SerializerMethodField()
-    
     class Meta:
         model = RoundAttemptModel
-        fields = [
-            'attempt_id', 
-            'candidate_name', 
-            'score', 
-            'total_marks', 
-            'percentage',
-            'status', 
-            'submitted_at',
-            'candidate_decision'
-        ]
-    
+        fields = ['attempt_id', 'candidate_name', 'score', 'total_marks', 'percentage', 'status', 'submitted_at', 'candidate_decision']
     def get_candidate_decision(self, obj):
-        """Get the candidate's decision from RoundCandidateDecisionModel"""
         try:
             decision_obj = RoundCandidateDecisionModel.objects.get(attempt=obj)
             return {
@@ -274,9 +193,7 @@ class AptitudeResultSerializer(serializers.ModelSerializer):
             }
         except RoundCandidateDecisionModel.DoesNotExist:
             return None
-    
     def get_percentage(self, obj):
-        """Calculate percentage if not available in candidate_decision"""
         try:
             decision_obj = RoundCandidateDecisionModel.objects.get(attempt=obj)
             return float(decision_obj.percentage)

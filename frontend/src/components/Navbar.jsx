@@ -71,11 +71,6 @@ export default function Navbar({ toggleSidebar, user }) {
           <h1 className="text-white text-xl font-semibold tracking-tight">
             RecruitIQ
           </h1>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${
-            isAdmin ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
-          }`}>
-            {isAdmin ? 'Admin' : 'Candidate'}
-          </span>
         </div>
       </div>
 

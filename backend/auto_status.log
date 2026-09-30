@@ -44020,3 +44020,633 @@ Updating drives...
 Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
 Update complete - Drives: [], Rounds: []
 ============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.533565+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.598366+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.650165+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.656402+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.755713+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.804937+00:00
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Updating rounds...
+Current time: 2026-09-28 11:25:49.809916+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+Updating drives...
+============================================================
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:49.982346+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:50.013844+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:50.229619+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:55.043960+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:55.118823+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-education/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:56.648580+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-education/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:25:56.718169+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:27:33.554573+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:27:33.625695+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:27:33.723913+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:27:33.851406+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:28:22.616884+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:28:22.731222+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:28:42.431074+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:28:42.629789+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Checking drive 2 (VNSGU Backend Developer Recruitment Drive 2026-27) - Current status: published
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:29:47.954040+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:29:48.165913+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:29:48.269282+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:29:48.463252+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:24.132007+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:24.211369+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:24.232577+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:24.298380+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:25.565892+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:25.660646+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:28.057073+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:28.127863+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:28.150269+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:28.222096+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:30.907747+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:30.981199+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:31.001645+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:31.079499+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:34.557895+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 11:31:34.627712+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.013475+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.112175+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.177754+00:00
+============================================================
+Updating rounds...
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.186228+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.321196+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.375330+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.411834+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.422020+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.522850+00:00
+============================================================
+Updating rounds...
+Update complete - Drives: [], Rounds: []
+Updating drives...
+============================================================
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.571887+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.577636+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.691442+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.697240+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:11:20.794636+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:08.216424+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:08.332611+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.253201+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.257671+00:00
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+Updating rounds...
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.260170+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.346517+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-available-drives/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.356893+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.359542+00:00
+============================================================
+Updating rounds...
+Middleware triggered by request: /candidate/get-candidate-round-status/7/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.399057+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.467984+00:00
+============================================================
+Updating rounds...
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.486164+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-round-status/6/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.504472+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Middleware triggered by request: /candidate/get-candidate-profile/
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.600754+00:00
+============================================================
+Updating rounds...
+============================================================
+Starting AutoStatusService.update_all()
+Current time: 2026-09-28 12:26:10.602923+00:00
+============================================================
+Updating rounds...
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================
+Updating drives...
+Update complete - Drives: [], Rounds: []
+============================================================

@@ -1,21 +1,8 @@
-// admin/pages/aptitude/AptitudeQuestionManagement.jsx
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../../configuration/api";
-import {
-  FaArrowLeft,
-  FaPlus,
-  FaFileExcel,
-  FaDownload,
-  FaSearch,
-  FaEdit,
-  FaTrash,
-  FaChevronDown,
-  FaChevronUp,
-  FaCheckCircle
-} from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaFileExcel, FaDownload, FaSearch, FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaCheckCircle } from "react-icons/fa";
 import { confirmDelete } from "../../../components/ToastConfirmation";
 import AddQuestionDrawer from "./components/AddQuestionDrawer";
 import UploadExcelModal from "./components/UploadExcelModal";
@@ -76,7 +63,6 @@ export default function AptitudeQuestionManagement() {
       const response = await api.get(`/canadmin/get-aptitude-questions/${roundId}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (response.data.success) {
         setQuestions(response.data.data);
         setFilteredQuestions(response.data.data);
@@ -106,11 +92,9 @@ export default function AptitudeQuestionManagement() {
       const token = localStorage.getItem("token");
       const payload = { ...questionData, round: parseInt(roundId) };
       if (editingQuestion) payload.id = editingQuestion.id;
-
       const response = await api.post(`/canadmin/add-update-aptitude-question/`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (response.data.success) {
         toast.success(response.data.message);
         setShowDrawer(false);
@@ -126,17 +110,13 @@ export default function AptitudeQuestionManagement() {
   };
 
   const handleDeleteQuestion = (question) => {
-    confirmDelete(
-      "Delete Question",
-      "Are you sure you want to delete this question?"
-    ).then(async (confirmed) => {
+    confirmDelete("Delete Question", "Are you sure you want to delete this question?").then(async (confirmed) => {
       if (confirmed) {
         try {
           const token = localStorage.getItem("token");
           const response = await api.delete(`/canadmin/delete-aptitude-question/${question.id}/`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-
           if (response.data.success) {
             toast.success(response.data.message);
             fetchQuestions();
@@ -156,7 +136,6 @@ export default function AptitudeQuestionManagement() {
       toast.error("No questions to export");
       return;
     }
-
     import("xlsx").then((XLSX) => {
       const excelData = questions.map((q, index) => ({
         "S.No": index + 1,
@@ -168,10 +147,8 @@ export default function AptitudeQuestionManagement() {
         "Correct Option": q.correct_option,
         Marks: q.marks || 1,
       }));
-
       const ws = XLSX.utils.json_to_sheet(excelData);
       ws["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 18 }, { wch: 10 }];
-
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Questions");
       const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
@@ -202,12 +179,8 @@ export default function AptitudeQuestionManagement() {
 
   return (
     <div className="w-full">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate(`/admin/aptitude-round/${roundId}`)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
+        <button onClick={() => navigate(`/admin/aptitude-round/${roundId}`)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <FaArrowLeft className="text-gray-500" />
         </button>
         <div>
@@ -218,18 +191,15 @@ export default function AptitudeQuestionManagement() {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button
           onClick={handleAddQuestion}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-        >
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
           <FaPlus size={14} /> Add Question
         </button>
         <button
           onClick={() => setShowUploadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-        >
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
           <FaFileExcel size={14} /> Upload
         </button>
         <button
@@ -239,8 +209,7 @@ export default function AptitudeQuestionManagement() {
             questions.length === 0
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
+          }`}>
           <FaDownload size={14} /> Export
         </button>
         <div className="flex-1 max-w-xs ml-auto relative">
@@ -250,12 +219,10 @@ export default function AptitudeQuestionManagement() {
             placeholder="Search questions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"/>
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -338,7 +305,6 @@ export default function AptitudeQuestionManagement() {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-4 flex justify-center">
           <nav className="flex items-center gap-1">
@@ -357,7 +323,6 @@ export default function AptitudeQuestionManagement() {
         </div>
       )}
 
-      {/* Drawer & Modal */}
       <AddQuestionDrawer
         isOpen={showDrawer}
         onClose={() => { setShowDrawer(false); setEditingQuestion(null); }}

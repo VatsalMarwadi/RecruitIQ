@@ -6,7 +6,6 @@ from django.contrib.postgres.fields import ArrayField
 
 current_year = datetime.now().year
 
-# Create your models here.
 class CandidateProfile(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.OneToOneField(UserTable, on_delete=models.CASCADE, related_name="profile")

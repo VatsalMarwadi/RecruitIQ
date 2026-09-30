@@ -1,8 +1,6 @@
 from datetime import timedelta
-
 from django.db import models
 
-# Create your models here.
 class InstituteModel(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, unique=True)
@@ -64,44 +62,23 @@ class RoundModel(models.Model):
     )
     status = models.CharField(max_length=50, choices=STATUS_OPTIONS, default="pending")
     meeting_link = models.URLField(blank=True, null=True)
-    
-    # When the round becomes active
     round_start_datetime = models.DateTimeField()
-    
-    # How long the round is active (in minutes)
     round_duration_minutes = models.PositiveIntegerField(default=60)
-    
-    # How long candidates have to complete the test (in minutes)
     test_duration_minutes = models.PositiveIntegerField()
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    # Track if test has been started by candidate
     is_test_started = models.BooleanField(default=False)
-    
     class Meta:
         ordering = ["round_order"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["drive", "round_order"],
-                name="unique_round_order_per_drive"
-            ),
-            models.UniqueConstraint(
-                fields=["drive", "round_type"],
-                name="unique_round_type_per_drive"
-            ),
+            models.UniqueConstraint(fields=["drive", "round_order"], name="unique_round_order_per_drive"),
+            models.UniqueConstraint(fields=["drive", "round_type"], name="unique_round_type_per_drive"),
         ]
-    
     def __str__(self):
         return f"{self.drive.title} - {self.get_round_type_display()}"
-    
     def get_round_end_datetime(self):
-        """Calculate when the round ends"""
         return self.round_start_datetime + timedelta(minutes=self.round_duration_minutes)
-    
     def get_test_end_datetime(self, test_start_time):
-        """Calculate when the test ends based on test_start_time"""
         return test_start_time + timedelta(minutes=self.test_duration_minutes)
     
 class AptitudeQuestionModel(models.Model):
@@ -209,10 +186,7 @@ class AptitudeAnswerModel(models.Model):
     marks_obtained = models.PositiveIntegerField(default=0)
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["attempt", "question"],
-                name="unique_attempt_question_answer"
-            )
+            models.UniqueConstraint(fields=["attempt", "question"], name="unique_attempt_question_answer")
         ]
 
 class CodingQuestionSubmissionModel(models.Model):
@@ -270,10 +244,7 @@ class DriveCandidateModel(models.Model):
     assigned_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["drive", "candidate"],
-                name="unique_drive_candidate_assignment"
-            )
+            models.UniqueConstraint(fields=["drive", "candidate"], name="unique_drive_candidate_assignment")
         ]
         ordering = ["assigned_at"]
     def __str__(self):
